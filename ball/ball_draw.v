@@ -1,6 +1,7 @@
 module ball_draw(
 	input resetn,
 	input clk,
+	
 	input go,			//loads when 1
 	input draw,			//draws when 0
 	input [7:0] x_in,

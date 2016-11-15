@@ -29,9 +29,42 @@ module brickbreaker(
 	output	[9:0]	VGA_G;	 				//	VGA Green[9:0]
 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0]
 	
+	wire resetn;
+	assign resetn = KEY[0];
+	
+	wire x_du, y_du plat_move;
+	assign x_du = SW[9];
+	assign y_du = SW[8];
+	assign plat_move = SW[0];
+	
+	wire enable;
+	
+	//delay
+	delay_counter delaycounter(
+		.clk(CLOCK_50),
+		.resetn(resetn),
+		.delay(20'd833333),
+		
+		.d_enable(enable),
+	);
+	
 	//logic
-	ball_pos();
+	ball_pos ballpos(
+		.enable(enable),
+		.clk(CLOCK_50),
+		.resetn(resetn),
+		
+		.x_du(x_du),
+		.y_du(y_du),
+		
+		.x(),
+		.y()
+	);
 	//draw
+	ball_draw balldraw(
+		
+	);
+	
 	draw();
 	
 endmodule
@@ -42,7 +75,7 @@ module draw(
 
 	input [7:0]x,
 	input [6:0]y,
-	input [2:0]color,
+	input [2:0]colour,
 	input writeEn,
 	
 	output			VGA_CLK;   				//	VGA Clock
@@ -63,6 +96,7 @@ module draw(
 		.x(x),
 		.y(y),
 		.plot(writeEn),
+		
 		/* Signals for the DAC to drive the monitor. */
 		.VGA_R(VGA_R),
 		.VGA_G(VGA_G),
