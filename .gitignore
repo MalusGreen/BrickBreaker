@@ -45,3 +45,7 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+db/brickbreaker.quiproj.1536.rdr.flock
+*.qpf
+brickbreaker.qsf
+db/brickbreaker.db_info
