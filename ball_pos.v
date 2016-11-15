@@ -3,8 +3,8 @@ module ball_pos(
 	input clk,
 	input resetn,
 	
-	input x_du, 
-	input u_du,
+	input x_du,
+	input y_du,
 	
 	output reg [7:0]x,
 	output reg [6:0]y
