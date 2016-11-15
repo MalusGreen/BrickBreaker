@@ -38,6 +38,8 @@ module brickbreaker(
 	assign plat_move = SW[0];
 	
 	wire enable;
+	wire [7:0]x;
+	wire [6:0]y;
 	
 	//delay
 	delay_counter delaycounter(
@@ -48,7 +50,7 @@ module brickbreaker(
 		.d_enable(enable),
 	);
 	
-	//logic
+	//memory
 	ball_pos ballpos(
 		.enable(enable),
 		.clk(CLOCK_50),
@@ -57,9 +59,12 @@ module brickbreaker(
 		.x_du(x_du),
 		.y_du(y_du),
 		
-		.x(),
-		.y()
+		.x(x),
+		.y(y)
 	);
+	
+	//logic
+	
 	//draw
 	ball_draw balldraw(
 		

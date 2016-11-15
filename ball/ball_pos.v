@@ -44,10 +44,12 @@ module x_counter(
 			counter <= 8'b0;
 			
 		else
-			if(updown)
-				counter = counter + 1;
-			else
-				counter = counter - 1;
+			if(enable)begin 
+				if(updown)
+					counter = counter + 1;
+				else
+					counter = counter - 1;
+			end
 	end
 
 endmodule
@@ -66,10 +68,12 @@ module y_counter(
 			counter <= 7'b0;
 			
 		else
-			if(updown)
-				counter = counter + 1;
-			else
-				counter = counter - 1;
+			if(enable)begin 
+				if(updown)
+					counter = counter + 1;
+				else
+					counter = counter - 1;
+			end
 	end
 
 endmodule
