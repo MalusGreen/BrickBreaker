@@ -1,5 +1,6 @@
-module draw_ball(
+module ball_draw(
 	input resetn,
+	input clk,
 	input [2:0]colour,
 	input go,			//loads when 1
 	input draw,			//draws when 0
@@ -15,7 +16,7 @@ module draw_ball(
 	wire finished_col, finished_all;
 	
 	control c0(
-		.clk(CLOCK_50),
+		.clk(clk),
 		.resetn(resetn),
 		.go(go),				
 		.draw(draw),
@@ -29,7 +30,7 @@ module draw_ball(
 	);
 	
 	datapath D0(
-		.clk(CLOCK_50),
+		.clk(clk),
 		.resetn(resetn),
 		.x_in(x_in),
 		.y_in(y_in),
