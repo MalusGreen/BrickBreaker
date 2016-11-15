@@ -48,4 +48,9 @@ Temporary Items
 db/brickbreaker.quiproj.1536.rdr.flock
 *.qpf
 brickbreaker.qsf
-db/brickbreaker.db_info
+c5_pin_model_dump.txt
+db
+output_files
+simulation
+incremental_db
+*.bak
