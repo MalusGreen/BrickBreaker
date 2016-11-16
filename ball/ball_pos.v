@@ -6,8 +6,8 @@ module ball_pos(
 	input x_du,
 	input y_du,
 	
-	output reg [7:0]x,
-	output reg [6:0]y
+	output reg [9:0]x,
+	output reg [9:0]y
 	);
 	
 	x_counter(
@@ -36,19 +36,19 @@ module x_counter(
 	input resetn,
 	input updown,
 	
-	output reg [7:0]c_x
+	output reg [9:0]c_x
 	);
 	
 	always @ (posedge clk) begin
 		if(!resetn)
-			counter <= 8'b0;
+			c_x <= 8'b0;
 			
 		else
 			if(enable)begin 
 				if(updown)
-					counter = counter + 1;
+					c_x = c_x + 1;
 				else
-					counter = counter - 1;
+					c_x = c_x - 1;
 			end
 	end
 
@@ -56,23 +56,23 @@ endmodule
 
 module y_counter(
 	input enable,
-	input clk,
 	input resetn,
+	input clk,
 	input updown,
 	
-	output reg [6:0]c_y
+	output reg [9:0]c_y
 	);
 	
 	always @ (posedge clk) begin
 		if(!resetn)
-			counter <= 7'b0;
+			c_y <= 7'b0;
 			
 		else
 			if(enable)begin 
 				if(updown)
-					counter = counter + 1;
+					c_y = c_y + 1;
 				else
-					counter = counter - 1;
+					c_y = c_y - 1;
 			end
 	end
 

@@ -38,9 +38,11 @@ module brickbreaker(
 	assign plat_move = SW[0];
 	
 	wire enable;
-	wire [7:0]x;
-	wire [6:0]y;
+	wire [9:0]ball_x, screen_x;
+	wire [9:0]ball_y, screen_y;
 	
+	assign screen_x = 10'd640 - 1;
+	assign screen_y = 10'd480 - 1;
 	//delay
 	delay_counter delaycounter(
 		.clk(CLOCK_50),
@@ -50,26 +52,39 @@ module brickbreaker(
 		.d_enable(enable),
 	);
 	
-	//memory
+	//game_logic
+	ball_logic(
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		.x(ball_x),
+		.x_max(screen_x),
+		.y(ball_y)
+		.y_max(screen_y),
+	);
+	
 	ball_pos ballpos(
 		.enable(enable),
-		.clk(CLOCK_50),
 		.resetn(resetn),
+		.clk(CLOCK_50),
 		
 		.x_du(x_du),
 		.y_du(y_du),
 		
-		.x(x),
-		.y(y)
+		.x(ball_x),
+		.y(ball_y)
 	);
 	
-	//logic
+	//drawfunctions
+	ball_draw balldraw(
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		
+		.go(),
+		.x_in(ball_x),
+		.y_in(ball_y),
+	);
 	
 	//draw
-	ball_draw balldraw(
-		
-	);
-	
 	draw();
 	
 endmodule
@@ -78,8 +93,8 @@ module draw(
 	input resetn,
 	input clk,
 
-	input [7:0]x,
-	input [6:0]y,
+	input [9:0]x,
+	input [9:0]y,
 	input [2:0]colour,
 	input writeEn,
 	

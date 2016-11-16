@@ -2,14 +2,13 @@ module ball_draw(
 	input resetn,
 	input clk,
 	
-	input go,			//loads when 1
-	input draw,			//draws when 0
-	input [7:0] x_in,
-	input [6:0] y_in, size,
+	input go,			//loads when 1, draws when 0
+	input [9:0] x_in,
+	input [9:0] y_in, size,
 	
 	output writeEn,
-	output [7:0] x_out,
-	output [6:0] y_out
+	output [9:0] x_out,
+	output [9:0] y_out
 	);
 	
 	wire ld_x, ld_y, inc_x, inc_y;
@@ -69,7 +68,7 @@ module control(
    begin: state_table 
 			case (current_state)
 					S_LOAD_XY: next_state = go ? S_LOAD_XY_WAIT : S_LOAD_XY; // Loop in current state until value is input
-					S_LOAD_XY_WAIT: next_state = draw ? S_LOAD_XY_WAIT : S_DRAW_COL; // Loop in current state until go signal goes low
+					S_LOAD_XY_WAIT: next_state = go ? S_LOAD_XY_WAIT : S_DRAW_COL; // Loop in current state until go signal goes low
 					S_DRAW_COL: next_state = finished_col ? S_INC_COL : S_DRAW_COL;// Keep incrementing and drawing the column until finished.
                S_INC_COL: next_state = finished_all ? S_LOAD_XY : S_DRAW_COL; // we will be done our operations, start over after
             default:     next_state = S_LOAD_XY;
@@ -115,32 +114,30 @@ endmodule
 module datapath(
 	input clk,
 	input resetn,
-	input [7:0]x_in,
-	input [6:0]y_in,
+	input [9:0]x_in, y_in, size,
 	input ld_x, ld_y, inc_x, inc_y,
-	input [6:0]size,
-	output reg [7:0]x_out,
-	output reg [6:0]y_out,
+	output reg [9:0]x_out,
+	output reg [9:0]y_out,
 	output reg finished_col,
 	output reg finished_all
 	);
 	
-	reg [7:0] x, qx;
-	reg [6:0] y, qy;
+	reg [9:0] x, qx;
+	reg [9:0] y, qy;
 	
 	always @ (posedge clk) begin
 		if(!resetn) begin
-			x  <= 8'b0;
-			y  <= 7'b0;
-			qx <= 8'b0;
-			qy <= 7'b0;
+			x  <= 9'b0;
+			y  <= 9'b0;
+			qx <= 9'b0;
+			qy <= 9'b0;
 			finished_col <= 0;
 			finished_all <= 0;
 		end
 		else begin
 			if(ld_x)begin
 				x  <= x_in;
-				qx <= {1'b0, size} - 1;
+				qx <= size - 1;
 				finished_col <= 0;
 				finished_all <= 0;
 			end
