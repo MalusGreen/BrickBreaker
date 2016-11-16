@@ -21,12 +21,12 @@ module ball_logic(
 			case (x)
 				x_max - size:	x_dir = 0;
 				0				:  x_dir = 1;
-				default		:  x_dir = 0;
+				default		:  x_dir = x_dir;
 			endcase
 			case (y)
 				y_max - size: y_dir = 0;
 				0				: y_dir = 1;
-				default		: y_dir = 0;
+				default		: y_dir = y_dir;
 			endcase
 		end
 	end

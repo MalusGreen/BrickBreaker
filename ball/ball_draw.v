@@ -15,7 +15,7 @@ module ball_draw(
 	wire ld_x, ld_y, inc_x, inc_y;
 	wire finished_col, finished_all;
 	
-	control c0(
+	b_control c0(
 		.clk(clk),
 		.resetn(resetn),
 		.go(go),
@@ -28,7 +28,7 @@ module ball_draw(
 		.wren(writeEn)
 	);
 	
-	datapath D0(
+	b_datapath D0(
 		.clk(clk),
 		.resetn(resetn),
 		.x_in(x_in),
@@ -48,7 +48,7 @@ module ball_draw(
 
 endmodule
 
-module control(
+module b_control(
 	input clk,
 	input resetn,
 	input go,
@@ -112,7 +112,7 @@ module control(
 	 
 endmodule
 
-module datapath(
+module b_datapath(
 	input clk,
 	input resetn,
 	input [9:0]x_in, y_in, size,

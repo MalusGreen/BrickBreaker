@@ -6,6 +6,7 @@
 `include "vga_adapter/vga_controller.v"
 `include "vga_adapter/vga_address_translator.v"
 `include "vga_adapter/vga_adapter.v"
+`include "platform.v"
 
 module brickbreaker(
 		CLOCK_50,						//	On Board 50 MHz
@@ -41,10 +42,11 @@ module brickbreaker(
 	//Inputs
 	wire resetn;
 	wire x_du, y_du;
-	wire plat_move;
+	wire left, right;
 	
 	assign resetn = KEY[0];
-	assign plat_move = SW[0];
+	assign left = KEY[3];
+	assign right = KEY[2];
 	
 	//Constants and connective wires.
 	wire enable, inc_enable;
@@ -129,6 +131,19 @@ module brickbreaker(
 		.colour(ball_colour)
 	);
 	
+	platform platlog(
+		.clk(CLOCK_50),
+		.resetn(resetn),
+		.left(left),
+		.right(right),
+		.enable(inc_enable),
+		.draw(go_plat),
+		
+		.x(plat_x),
+		.y(plat_y),
+		.colour(plat_colour),
+		.writeEn(plat_en)
+	);
 	
 	//MUX
 	draw_mux drawmux(

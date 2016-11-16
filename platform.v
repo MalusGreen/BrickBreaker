@@ -21,9 +21,8 @@ module platform(
 	control c(
 		.clk(clk),
 		.resetn(resetn),				
-		.draw(left | right),
+		.draw(draw),
 		.finished_row(finished_row),
-		.enable(enable),
 		
 		.ld_x(ld_x),
 		.inc_x(inc_x),
@@ -33,6 +32,8 @@ module platform(
 	datapath d(
 		.clk(clk),
 		.resetn(resetn),
+		.enable(enable),
+		
 		.left(left),
 		.right(right),
 		.size(size),
@@ -55,7 +56,6 @@ module control(
 	input resetn,
 	input draw,
 	input finished_row,
-	input enable,
 	output reg ld_x, inc_x,
 	output reg wren
 	);
@@ -99,7 +99,7 @@ module control(
     begin: state_FFs
         if(!resetn)
             current_state <= S_LOAD_X;
-        else if(enable)
+        else
 				current_state <= next_state;
     end // state_FFS
 	
@@ -109,6 +109,7 @@ endmodule
 module datapath(
 	input clk,
 	input resetn,
+	input enable,
 	input [9:0]left, right, //x_in
 	input [9:0]size,
 	input ld_x, inc_x,
@@ -130,9 +131,9 @@ module datapath(
 		end
 		else begin
 			if(ld_x)begin
-				if(left & x != 10'd0) 
+				if(enable & left & x != 10'd0) 
 					x <= x - 1;
-				else if(right & x != 10'd159) 
+				else if(enable & right & x != 10'd159) 
 					x <= x + 1;
 				qx <= size - 1;
 				finished_row <= 0;
