@@ -4,18 +4,19 @@ module platform(
 	input left,
 	input right,
 	input enable,
+	input draw,
 	output [9:0] x, y,
-	output colour,
-	output writeEn
+	output [2:0] colour,
+	output writeEn,
+	
+	output [9:0]d_x, d_qx
 	);
 	
 	wire ld_x, inc_x;
 	wire finished_row;
 	
-	wire dx = 0 - left + right;
-	
 	wire [9:0] size = 10'd4;
-	assign colour = 100;
+	assign colour = 3'b100;
 	
 	control c(
 		.clk(clk),
@@ -32,14 +33,18 @@ module platform(
 	datapath d(
 		.clk(clk),
 		.resetn(resetn),
-		.dx(),
+		.left(left),
+		.right(right),
 		.size(size),
 		.ld_x(ld_x),
 		.inc_x(inc_x),
 		
 		.x_out(x),
 		.y_out(y),
-		.finished_row(finished_row)
+		.finished_row(finished_row),
+		
+		.x(d_x),
+		.qx(d_qx)
 	);
 	
 endmodule
@@ -55,10 +60,10 @@ module control(
 	output reg wren
 	);
 	
-	reg current_state, next_state;
+	reg [1:0] current_state, next_state;
 
-	localparam 	S_LOAD_X			= 1'd0,
-					S_INC_X   	   = 1'd1;
+	localparam 	S_LOAD_X			= 2'd0,
+					S_INC_X   	   = 2'd1;
 					
 	always @(*)
    begin: state_table 
@@ -78,12 +83,12 @@ module control(
 
         case (current_state)
             S_LOAD_X: begin
-					ld_x  = 1'b1;
-					wren  = 1'b1;
+					ld_x  = 1;
+					wren  = 1;
 					end
 				S_INC_X: begin
-					inc_x = 1'b1;
-					wren  = 1'b1;
+					inc_x = 1;
+					wren  = 1;
 					end
         // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
         endcase
@@ -95,7 +100,7 @@ module control(
         if(!resetn)
             current_state <= S_LOAD_X;
         else if(enable)
-					current_state <= next_state;
+				current_state <= next_state;
     end // state_FFS
 	
 endmodule
@@ -104,26 +109,31 @@ endmodule
 module datapath(
 	input clk,
 	input resetn,
-	input [9:0]dx, //x_in
+	input [9:0]left, right, //x_in
 	input [9:0]size,
 	input ld_x, inc_x,
 	output reg [9:0]x_out, y_out,
-	output reg finished_row
+	output reg finished_row,
+	
+	output reg [9:0] x, qx
 	);
 	
-	reg [9:0] x, qx;
+//	reg [9:0] x, qx;
 	reg [9:0] y;
 	
 	always @ (posedge clk) begin
 		if(!resetn) begin
-			x  <= 10'b0;
-			qx <= 10'b0;
+			x  <= 10'd32;
+			qx <= 10'd0;
 			y  <= 10'd64;
 			finished_row <= 0;
 		end
 		else begin
 			if(ld_x)begin
-				x  <= x + dx;
+				if(left & x != 10'd0) 
+					x <= x - 1;
+				else if(right & x != 10'd159) 
+					x <= x + 1;
 				qx <= size - 1;
 				finished_row <= 0;
 			end
