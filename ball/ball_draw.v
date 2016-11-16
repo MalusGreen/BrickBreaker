@@ -50,7 +50,6 @@ module control(
 	input clk,
 	input resetn,
 	input go,
-	input draw,
 	input finished_all,
 	input finished_col,
 	output reg ld_x, ld_y, inc_x, inc_y,
@@ -59,7 +58,7 @@ module control(
 	
 	reg [1:0] current_state, next_state;
 
-	localparam 	S_LOAD_XY			= 2'd0,
+	localparam 	S_LOAD_XY		= 2'd0,
 					S_LOAD_XY_WAIT	= 2'd1,
 					S_DRAW_COL     = 2'd2,
 					S_INC_COL      = 2'd3;
@@ -68,7 +67,6 @@ module control(
    begin: state_table 
 			case (current_state)
 					S_LOAD_XY: next_state = go ? S_LOAD_XY_WAIT : S_LOAD_XY; // Loop in current state until value is input
-					S_LOAD_XY_WAIT: next_state = go ? S_LOAD_XY_WAIT : S_DRAW_COL; // Loop in current state until go signal goes low
 					S_DRAW_COL: next_state = finished_col ? S_INC_COL : S_DRAW_COL;// Keep incrementing and drawing the column until finished.
                S_INC_COL: next_state = finished_all ? S_LOAD_XY : S_DRAW_COL; // we will be done our operations, start over after
             default:     next_state = S_LOAD_XY;
