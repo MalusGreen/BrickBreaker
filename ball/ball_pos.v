@@ -6,8 +6,8 @@ module ball_pos(
 	input x_du,
 	input y_du,
 	
-	output reg [9:0]x,
-	output reg [9:0]y
+	output [9:0]x,
+	output [9:0]y
 	);
 	
 	x_counter xc(

@@ -9,7 +9,7 @@ module ball_draw(
 	output writeEn,
 	output [9:0] x_out,
 	output [9:0] y_out,
-	output [2:0] color
+	output [2:0] colour
 	);
 	
 	wire ld_x, ld_y, inc_x, inc_y;
@@ -44,7 +44,7 @@ module ball_draw(
 		.y_out(y_out)
 	);
 	
-	assign color = 3'b111;
+	assign colour = 3'b111;
 
 endmodule
 

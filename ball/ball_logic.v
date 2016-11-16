@@ -1,10 +1,9 @@
 module ball_logic(
-	input enable,
 	input resetn,
 	input clk,
 	
-	input [9:0]x, max_x,
-	input [9:0]y, max_y,
+	input [9:0]x, x_max,
+	input [9:0]y, y_max,
 	input [9:0]size,
 	
 	output x_du,
@@ -13,19 +12,21 @@ module ball_logic(
 	
 	reg x_dir, y_dir;
 	
-	always @(posedge clk)begin
+	always @(*)begin
 		if(!resetn) begin
 			x_dir <= 0;
 			y_dir <= 0;
 		end
-		else if(enable) begin
+		else begin
 			case (x)
-				max_x - size:	x_dir <= 0;
-				0				:  x_dir <= 1;
+				x_max - size:	x_dir = 0;
+				0				:  x_dir = 1;
+				default		:  x_dir = 0;
 			endcase
 			case (y)
-				max_y - size: y_dir <= 0;
-				0				: y_dir <= 1;
+				y_max - size: y_dir = 0;
+				0				: y_dir = 1;
+				default		: y_dir = 0;
 			endcase
 		end
 	end
