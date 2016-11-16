@@ -1,7 +1,7 @@
 module delay_counter(
 	input clk,
 	input resetn,
-	input [20:0]delay,
+	input [19:0]delay,
 	
 	output d_enable
 	);

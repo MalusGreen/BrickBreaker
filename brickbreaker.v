@@ -46,6 +46,10 @@ module brickbreaker(
 	wire [9:0]size;
 	wire [20:0]delay;
 	
+	wire go_ball, go_bricks, go_plat;
+	wire [1:0]draw_mux;
+	wire iscolor;
+	
 	assign screen_x = 10'd640 - 1;
 	assign screen_y = 10'd480 - 1;
 	assign delay = 20'd833333;
@@ -53,14 +57,29 @@ module brickbreaker(
 	
 	//draw fsm
 	
+	draw_fsm FSM(
+		.enable(enable),
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		
+		.go_ball(go_ball),
+		.go_bricks(go_bricks),
+		.go_plat(go_plat),
+		
+		.draw_mux(draw_mux),
+		.iscolor(iscolor),
+		.inc_enable(enable)
+	);
+	
 	//game_logic
-	ball_logic(
+	ball_logic balllogic(
+		.enable(enable),
 		.resetn(resetn),
 		.clk(CLOCK_50),
 		
 		.x(ball_x),
 		.x_max(screen_x),
-		.y(ball_y)
+		.y(ball_y),
 		.y_max(screen_y),
 		.size(size)
 	);
@@ -76,18 +95,78 @@ module brickbreaker(
 		.y(ball_y)
 	);
 	
+	//Wires for draw values.
+	wire [9:0]ball_dx,brick_dx,plat_dx,ball_dy,brick_dy,plat_dy;
+	wire [2:0]ball_color,brick_color,plat_color;
+	wire ball_en, brick_en, plat_en;
+	
+	wire [9:0]x_vga,y_vga;
+	wire [2:0]color_vga;
+	wire writeEn_vga;
+	
 	//drawfunctions
 	ball_draw balldraw(
 		.resetn(resetn),
 		.clk(CLOCK_50),
 		
-		.go(),
+		.go(go_ball),
 		.x_in(ball_x),
 		.y_in(ball_y),
+		
+		.writeEn(ball_en),
+		.x(ball_dx),
+		.y(ball_dx),
+		.color(ball_color)
+	);
+	
+	
+	//MUX
+	draw_mux drawmux(
+		.ball_x(ball_dx),
+		.brick_x(brick_dx),
+		.plat_x(plat_dx),
+		.ball_y(ball_dy),
+		.brick_y(brick_dy),
+		.plat_y(plat_dy),
+		
+		.ball_color(ball_color),
+		.brick_color(brick_color),
+		.plat_color(plat_color),
+		
+		.ball_en(ball_en), 
+		.brick_en(brick_en), 
+		.plat_en(plat_en),
+		
+		.draw_mux(draw_mux),
+		
+		.iscolor(iscolor),
+		
+		.x(x_vga),
+		.y(y_vga),
+		.writeEn(writeEn_vga),
+		.color(color_vga)
 	);
 	
 	//draw
-	draw();
+	draw draw(
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		
+		.x(x_vga),
+		.y(y_vga),
+		.writeEn(writeEn_vga),
+		.color(color_vga),
+		
+		// The ports below are for the VGA output.  Do not change.
+		.VGA_CLK(VGA_CLK),   						//	VGA Clock
+		.VGA_HS(VGA_HS),							//	VGA H_SYNC
+		.VGA_VS(VGA_VS),							//	VGA V_SYNC
+		.VGA_BLANK_N(VGA_BLANK_N),						//	VGA BLANK
+		.VGA_SYNC_N(VGA_SYNC_N),						//	VGA SYNC
+		.VGA_R(VGA_R),   						//	VGA Red[9:0]
+		.VGA_G(VGA_G),	 						//	VGA Green[9:0]
+		.VGA_B(VGA_B)   						   //	VGA Blue[9:0]
+	);
 	
 	//delay
 	delay_counter delaycounter(
@@ -95,11 +174,12 @@ module brickbreaker(
 		.resetn(resetn),
 		.delay(delay),
 		
-		.d_enable(enable),
+		.d_enable(enable)
 	);
 	
 endmodule
 
+//MAIN FSM
 module draw_fsm(
 	input enable,
 	input resetn,
@@ -108,7 +188,7 @@ module draw_fsm(
 	output reg go_ball, go_bricks, go_plat,
 	output reg [1:0] draw_mux,
 	output reg iscolor,
-	output reg inc_enable;
+	output reg inc_enable
 	);
 	
 	reg [2:0] current_state, next_state;
@@ -122,11 +202,11 @@ module draw_fsm(
 					S_INC				= 'd6,
 					S_CHANGE			= 'd7;
 					
-	
-	wire delay_enable
-	wire reg delay_reset;
+	//CONSTANTS AND COUNTER VARIABLES
+	wire delay_enable;
+	reg delay_reset;
 	wire [20:0] ball_delay, brick_delay, plat_delay;
-	wire reg [20:0] delay;
+	reg [20:0] delay;
 	
 	assign ball_delay 	= 20'd16;
 	assign brick_delay	= 20'd0;
@@ -165,48 +245,48 @@ module draw_fsm(
 		case (current_state)
 			S_BALL_LOAD: begin 
 				go_ball = 1;
-				draw_mux = 2'd1;
+				draw_mux = 2'd0;
 			end
 			S_BALL_DRAW: begin 
 				delay_reset = 1;
 				delay = ball_delay;
-				draw_mux = 2'd1;
+				draw_mux = 2'd0;
 			end
 			S_BRICKS_LOAD: begin 
 				go_bricks = 1;
-				draw_mux = 2'd2;
+				draw_mux = 2'd1;
 			end
 			S_BRICKS_DRAW: begin 
 				delay_reset = 1;
 				delay = brick_delay;
-				draw_mux = 2'd2;
+				draw_mux = 2'd1;
 			end
 			S_PLAT_LOAD: begin 
 				go_plat = 1;
-				draw_mux = 2'd3;
+				draw_mux = 2'd2;
 			end
 			S_PLAT_DRAW: begin 
 				delay_reset = 1;
 				delay = plat_delay;
-				draw_mux = 2'd3;
+				draw_mux = 2'd2;
+			end
+			S_INC: begin
+				if(iscolor)
+					inc_enable = 1;
 			end
 			S_CHANGE: begin
-				if(iscolor)
 				iscolor <= ~iscolor;
 			end
 		endcase
-	end
-	
-	always @(posedge clk) begin
-		if(!resetn)
-			iscolor <= 0;
 	end
 	 	 
    // current_state registers
    always@(posedge clk)
    begin: state_FFs
-       if(!resetn)
-           current_state <= S_LOAD_XY;
+       if(!resetn)begin 
+           current_state <= S_BALL_LOAD;
+			  iscolor <= 0;
+		 end
        else
            current_state <= next_state;
    end // state_FFS
@@ -222,14 +302,14 @@ module draw(
 	input [2:0]colour,
 	input writeEn,
 	
-	output			VGA_CLK;   				//	VGA Clock
-	output			VGA_HS;					//	VGA H_SYNC
-	output			VGA_VS;					//	VGA V_SYNC
-	output			VGA_BLANK_N;				//	VGA BLANK
-	output			VGA_SYNC_N;				//	VGA SYNC
-	output	[9:0]	VGA_R;   				//	VGA Red[9:0]
-	output	[9:0]	VGA_G;	 				//	VGA Green[9:0]
-	output	[9:0]	VGA_B;   				//	VGA Blue[9:0]
+	output			VGA_CLK,   				//	VGA Clock
+	output			VGA_HS,					//	VGA H_SYNC
+	output			VGA_VS,					//	VGA V_SYNC
+	output			VGA_BLANK_N,				//	VGA BLANK
+	output			VGA_SYNC_N,				//	VGA SYNC
+	output	[9:0]	VGA_R,   				//	VGA Red[9:0]
+	output	[9:0]	VGA_G,	 				//	VGA Green[9:0]
+	output	[9:0]	VGA_B   					//	VGA Blue[9:0]
 	);
 	
 	
@@ -254,5 +334,44 @@ module draw(
 	defparam VGA.MONOCHROME = "FALSE";
 	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 	defparam VGA.BACKGROUND_IMAGE = "black.mif";
+	
+endmodule
+
+module draw_mux(
+	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,
+	input [2:0]ball_color,brick_color,plat_color,
+	input ball_en, brick_en, plat_en,
+	input [1:0]draw_mux,
+	input iscolor,
+	
+	output reg [9:0]x,y,
+	output reg [2:0]color,
+	output reg writeEn
+	);
+	
+	localparam BLACK = 3'b000;
+	
+	always @(*)begin
+		case(draw_mux)
+			2'd0:begin 
+				x = ball_x;
+				y = ball_y;
+				color = (iscolor) ? ball_color : BLACK;
+				writeEn = ball_en;
+			end
+			2'd1:begin 
+				x = brick_x;
+				y = brick_y;
+				color = (iscolor) ? brick_color : BLACK;;
+				writeEn = brick_en;
+			end
+			2'd2:begin 
+				x = plat_x;
+				y = plat_y;
+				color = (iscolor) ? plat_color : BLACK;;
+				writeEn = plat_en;
+			end
+		endcase
+	end
 	
 endmodule

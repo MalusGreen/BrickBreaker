@@ -1,4 +1,5 @@
 module ball_logic(
+	input enable,
 	input resetn,
 	input clk,
 	
@@ -17,7 +18,7 @@ module ball_logic(
 			x_dir <= 0;
 			y_dir <= 0;
 		end
-		else begin
+		else if(enable) begin
 			case (x)
 				max_x - size:	x_dir <= 0;
 				0				:  x_dir <= 1;
@@ -29,9 +30,8 @@ module ball_logic(
 		end
 	end
 	
-	always @(*) begin
-		assign x_ud = x_dir;
-		assign y_ud = y_dir;
-	end
+	
+	assign x_du = x_dir;
+	assign y_du = y_dir;
 	
 endmodule

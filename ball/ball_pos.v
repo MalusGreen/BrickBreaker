@@ -10,7 +10,7 @@ module ball_pos(
 	output reg [9:0]y
 	);
 	
-	x_counter(
+	x_counter xc(
 		.enable(enable),
 		.clk(clk),
 		.resetn(resetn),
@@ -19,7 +19,7 @@ module ball_pos(
 		.c_x(x)
 	);
 	
-	y-counter(
+	y_counter yc(
 		.enable(enable),
 		.clk(clk),
 		.resetn(resetn),

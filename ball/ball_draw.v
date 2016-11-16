@@ -8,7 +8,8 @@ module ball_draw(
 	
 	output writeEn,
 	output [9:0] x_out,
-	output [9:0] y_out
+	output [9:0] y_out,
+	output [2:0] color
 	);
 	
 	wire ld_x, ld_y, inc_x, inc_y;
@@ -17,8 +18,7 @@ module ball_draw(
 	control c0(
 		.clk(clk),
 		.resetn(resetn),
-		.go(go),				
-		.draw(draw),
+		.go(go),
 		.finished_col(finished_col),
 		.finished_all(finished_all),
 		.ld_x(ld_x),
@@ -40,9 +40,11 @@ module ball_draw(
 		.ld_y(ld_y),
 		.inc_x(inc_x),
 		.inc_y(inc_y),
-		.x_out(x),
-		.y_out(y)
+		.x_out(x_out),
+		.y_out(y_out)
 	);
+	
+	assign color = 3'b111;
 
 endmodule
 
