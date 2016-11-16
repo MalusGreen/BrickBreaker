@@ -41,14 +41,14 @@ module x_counter(
 	
 	always @ (posedge clk) begin
 		if(!resetn)
-			c_x <= 8'b0;
+			c_x <= 10'b0;
 			
 		else
 			if(enable)begin 
 				if(updown)
-					c_x = c_x + 1;
+					c_x <= c_x + 1;
 				else
-					c_x = c_x - 1;
+					c_x <= c_x - 1;
 			end
 	end
 
@@ -65,14 +65,14 @@ module y_counter(
 	
 	always @ (posedge clk) begin
 		if(!resetn)
-			c_y <= 7'b0;
+			c_y <= 10'b0;
 			
 		else
 			if(enable)begin 
 				if(updown)
-					c_y = c_y + 1;
+					c_y <= c_y + 1;
 				else
-					c_y = c_y - 1;
+					c_y <= c_y - 1;
 			end
 	end
 

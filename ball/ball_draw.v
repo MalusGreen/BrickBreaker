@@ -68,10 +68,11 @@ module control(
 	always @(*)
    begin: state_table 
 			case (current_state)
-					S_LOAD_XY: next_state = go ? S_LOAD_XY_WAIT : S_LOAD_XY; // Loop in current state until value is input
-					S_DRAW_COL: next_state = finished_col ? S_INC_COL : S_DRAW_COL;// Keep incrementing and drawing the column until finished.
-               S_INC_COL: next_state = finished_all ? S_LOAD_XY : S_DRAW_COL; // we will be done our operations, start over after
-            default:     next_state = S_LOAD_XY;
+					S_LOAD_XY: 			next_state = go ? S_LOAD_XY_WAIT : S_LOAD_XY; // Loop in current state until value is input
+					S_LOAD_XY_WAIT: 	next_state = go ? S_LOAD_XY_WAIT : S_DRAW_COL;
+					S_DRAW_COL: 		next_state = finished_col ? S_INC_COL : S_DRAW_COL;// Keep incrementing and drawing the column until finished.
+               S_INC_COL: 			next_state = finished_all ? S_LOAD_XY : S_DRAW_COL; // we will be done our operations, start over after
+            default:     			next_state = S_LOAD_XY;
         endcase
     end // state_table
 	 
@@ -127,10 +128,10 @@ module datapath(
 	
 	always @ (posedge clk) begin
 		if(!resetn) begin
-			x  <= 9'b0;
-			y  <= 9'b0;
-			qx <= 9'b0;
-			qy <= 9'b0;
+			x  <= 10'b0;
+			y  <= 10'b0;
+			qx <= 10'b0;
+			qy <= 10'b0;
 			finished_col <= 0;
 			finished_all <= 0;
 		end
@@ -152,7 +153,7 @@ module datapath(
 			if(inc_x)begin
 				qx <= qx - 1;
 				qy <= size - 1;
-				if(qx - 1 == 8'd0)
+				if(qx - 1 == 10'd0)
 					finished_all <= 1;
 				
 				finished_col <= 0;
@@ -160,7 +161,7 @@ module datapath(
 			
 			if(inc_y)begin
 				qy <= qy - 1;
-				if(qy - 1 == 7'd0)
+				if(qy - 1 == 10'd0)
 					finished_col <= 1;
 			end
 		end

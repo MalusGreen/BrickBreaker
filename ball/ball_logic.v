@@ -6,13 +6,13 @@ module ball_logic(
 	input [9:0]y, y_max,
 	input [9:0]size,
 	
-	output x_du,
-	output y_du
+	output reg x_du,
+	output reg y_du
 	);
 	
 	reg x_dir, y_dir;
 	
-	always @(*)begin
+	always @(posedge clk)begin
 		if(!resetn) begin
 			x_dir <= 0;
 			y_dir <= 0;
@@ -32,7 +32,9 @@ module ball_logic(
 	end
 	
 	
-	assign x_du = x_dir;
-	assign y_du = y_dir;
+	always @(posedge clk)begin
+		x_du <= x_dir;
+		y_du <= y_dir;
+	end
 	
 endmodule

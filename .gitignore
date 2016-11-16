@@ -54,3 +54,5 @@ output_files
 simulation
 incremental_db
 *.bak
+*.wlf
+work
