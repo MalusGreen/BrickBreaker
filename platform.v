@@ -5,7 +5,7 @@ module platform(
 	input right,
 	input enable,
 	input draw,
-	output [9:0] x, y,
+	output [9:0]x, y,
 	output [2:0] colour,
 	output writeEn,
 	
@@ -15,7 +15,7 @@ module platform(
 	wire ld_x, inc_x;
 	wire finished_row;
 	
-	wire [9:0] size = 10'd4;
+	wire [9:0] size = 10'd20;
 	assign colour = 3'b100;
 	
 	control c(
@@ -110,7 +110,7 @@ module datapath(
 	input clk,
 	input resetn,
 	input enable,
-	input [9:0]left, right, //x_in
+	input left, right, //x_in
 	input [9:0]size,
 	input ld_x, inc_x,
 	output reg [9:0]x_out, y_out,

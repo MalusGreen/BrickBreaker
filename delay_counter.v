@@ -1,18 +1,18 @@
 module delay_counter(
 	input clk,
 	input resetn,
-	input [19:0]delay,
+	input [39:0]delay,
 	
 	output d_enable
 	);
 	
-	reg [19:0]q;
+	reg [39:0]q;
 	always @ (posedge clk) begin
 		if(!resetn)
 //			q <= 20'd833333 - 1;
 			q <= delay - 1;
 		else begin
-			if(q == 20'b0) begin
+			if(q == 40'b0) begin
 //				q <= 20'd833333 - 1;
 				q <= delay - 1;
 			end
@@ -21,6 +21,6 @@ module delay_counter(
 		end
 	end
 	
-	assign d_enable = (q == 20'b0) ? 1 : 0;
+	assign d_enable = (q == 40'b0) ? 1 : 0;
 
 endmodule

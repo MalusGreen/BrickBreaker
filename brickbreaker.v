@@ -1,12 +1,12 @@
-`include "ball/ball_pos.v"
-`include "ball/ball_draw.v"
-`include "ball/ball_logic.v"
-`include "delay_counter.v"
-`include "vga_adapter/vga_pll.v"
-`include "vga_adapter/vga_controller.v"
-`include "vga_adapter/vga_address_translator.v"
-`include "vga_adapter/vga_adapter.v"
-`include "platform.v"
+//`include "ball_pos.v"
+//`include "ball_draw.v"
+//`include "ball_logic.v"
+//`include "delay_counter.v"
+//`include "vga_pll.v"
+//`include "vga_controller.v"
+//`include "vga_address_translator.v"
+//`include "vga_adapter.v"
+//`include "platform.v"
 
 module brickbreaker(
 		CLOCK_50,						//	On Board 50 MHz
@@ -45,24 +45,26 @@ module brickbreaker(
 	wire left, right;
 	
 	assign resetn = KEY[0];
-	assign left = KEY[3];
-	assign right = KEY[2];
+	assign left = ~KEY[3];
+	assign right = ~KEY[2];
 	
 	//Constants and connective wires.
 	wire enable, inc_enable;
 	wire [9:0]ball_x, screen_x;
 	wire [9:0]ball_y, screen_y;
 	wire [9:0]size;
-	wire [20:0]delay;
+	wire [39:0]delay;
 	
 	wire go_ball, go_bricks, go_plat;
 	wire [1:0]draw_mux;
 	wire iscolour;
 	
-	assign screen_x = 10'd640 - 1;
-	assign screen_y = 10'd480 - 1;
-	assign delay = 20'd32;
-	assign size = 10'd4;
+	assign screen_x = 10'd320 - 1;
+	assign screen_y = 10'd240 - 1;
+	assign delay = 40'd833333;
+//	assign delay = 40'd1666666;
+//	assign delay = 40'd32;
+	assign size = 10'd10;
 	
 	//draw fsm
 	
@@ -115,6 +117,11 @@ module brickbreaker(
 	wire [2:0]colour_vga;
 	wire writeEn_vga;
 	
+	assign brick_dx = 10'd0;
+	assign brick_dy = 10'd0;
+	assign brick_en = 1'b0;
+	assign brick_colour = 3'd0;
+	
 	//drawfunctions
 	ball_draw balldraw(
 		.resetn(resetn),
@@ -139,8 +146,8 @@ module brickbreaker(
 		.enable(inc_enable),
 		.draw(go_plat),
 		
-		.x(plat_x),
-		.y(plat_y),
+		.x(plat_dx),
+		.y(plat_dy),
 		.colour(plat_colour),
 		.writeEn(plat_en)
 	);
@@ -216,25 +223,26 @@ module draw_fsm(
 	output reg inc_enable
 	);
 	
-	reg [2:0] current_state, next_state;
+	reg [3:0] current_state, next_state;
 	
-	localparam	S_BALL_LOAD 	= 'd0,
-					S_BALL_DRAW 	= 'd1,
-					S_BRICKS_LOAD	= 'd2,
-					S_BRICKS_DRAW	= 'd3,
-					S_PLAT_LOAD		= 'd4,
-					S_PLAT_DRAW		= 'd5,
-					S_INC				= 'd6,
-					S_CHANGE			= 'd7;
+	localparam	S_FSM_WAIT		= 4'd0,
+					S_BALL_LOAD 	= 4'd1,
+					S_BALL_DRAW 	= 4'd2,
+					S_BRICKS_LOAD	= 4'd3,
+					S_BRICKS_DRAW	= 4'd4,
+					S_PLAT_LOAD		= 4'd5,
+					S_PLAT_DRAW		= 4'd6,
+					S_INC				= 4'd7,
+					S_CHANGE			= 4'd8;
 					
 	//CONSTANTS AND COUNTER VARIABLES
 	reg delay_reset, changecolour;
 	wire [19:0] ball_delay, brick_delay, plat_delay;
 	reg [19:0] delay;
 	
-	assign ball_delay 	= 20'd16;
+	assign ball_delay 	= 20'd30;
 	assign brick_delay	= 20'd2;
-	assign plat_delay 	= 20'd4;
+	assign plat_delay 	= 20'd10;
 	
 	wire [19:0]count;
 	
@@ -248,15 +256,16 @@ module draw_fsm(
 	
 	always @(*)begin
 		case (current_state)
-				S_BALL_LOAD: next_state = (enable | iscolour) ? S_BALL_DRAW : S_BALL_LOAD;
+				S_FSM_WAIT: next_state = (enable | iscolour) ? S_BALL_LOAD : S_FSM_WAIT;
+				S_BALL_LOAD: next_state = S_BALL_DRAW;
 				S_BALL_DRAW: next_state = (count == delay) ? S_BRICKS_LOAD : S_BALL_DRAW;
 				S_BRICKS_LOAD: next_state = S_BRICKS_DRAW;
 				S_BRICKS_DRAW: next_state = (count == delay) ? S_PLAT_LOAD : S_BRICKS_DRAW;
 				S_PLAT_LOAD: next_state = S_PLAT_DRAW;
 				S_PLAT_DRAW: next_state = (count == delay) ? S_INC : S_PLAT_DRAW;
 				S_INC: next_state = S_CHANGE;
-				S_CHANGE: next_state = S_BALL_LOAD;
-				default: next_state = S_BALL_LOAD;
+				S_CHANGE: next_state = S_FSM_WAIT;
+				default: next_state = S_FSM_WAIT;
 		endcase
 	end
 	
@@ -323,7 +332,7 @@ module draw_fsm(
    always@(posedge clk)
    begin: state_FFs
        if(!resetn)
-           current_state <= S_BALL_LOAD;
+           current_state <= S_FSM_WAIT;
        else
            current_state <= next_state;
    end // state_FFS
@@ -350,27 +359,27 @@ module draw(
 	);
 	
 	
-//	vga_adapter VGA(
-//		.resetn(resetn),
-//		.clock(clk),
-//		.colour(colour),
-//		.x(x),
-//		.y(y),
-//		.plot(writeEn),
-//		
-//		/* Signals for the DAC to drive the monitor. */
-//		.VGA_R(VGA_R),
-//		.VGA_G(VGA_G),
-//		.VGA_B(VGA_B),
-//		.VGA_HS(VGA_HS),
-//		.VGA_VS(VGA_VS),
-//		.VGA_BLANK(VGA_BLANK_N),
-//		.VGA_SYNC(VGA_SYNC_N),
-//		.VGA_CLK(VGA_CLK));
-//	defparam VGA.RESOLUTION = "160x120";
-//	defparam VGA.MONOCHROME = "FALSE";
-//	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
-//	defparam VGA.BACKGROUND_IMAGE = "black.mif";
+	vga_adapter VGA(
+		.resetn(resetn),
+		.clock(clk),
+		.colour(colour),
+		.x(x),
+		.y(y),
+		.plot(writeEn),
+		
+		/* Signals for the DAC to drive the monitor. */
+		.VGA_R(VGA_R),
+		.VGA_G(VGA_G),
+		.VGA_B(VGA_B),
+		.VGA_HS(VGA_HS),
+		.VGA_VS(VGA_VS),
+		.VGA_BLANK(VGA_BLANK_N),
+		.VGA_SYNC(VGA_SYNC_N),
+		.VGA_CLK(VGA_CLK));
+	defparam VGA.RESOLUTION = "160x120";
+	defparam VGA.MONOCHROME = "FALSE";
+	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
+	defparam VGA.BACKGROUND_IMAGE = "black.mif";
 	
 endmodule
 

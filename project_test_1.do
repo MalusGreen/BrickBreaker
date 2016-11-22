@@ -24,6 +24,8 @@ run 2ns
 force {KEY[0]} 1
 run 2ns
 
+force {KEY[3]} 0
+force {KEY[2]} 1
 force {SW[9:0]} 001000000
 
 run 2000ns
