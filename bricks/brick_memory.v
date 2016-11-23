@@ -1,9 +1,9 @@
 module brick_memory(
 		input clk,
 		input resetn,
-		input [5:0]address,
+		input [9:0]x_in, y_in,
 		input wren,
-		input [5:0]gridx, gridy, brickx, bricky,
+		input [9:0]gridx, gridy, height, width,
 		
 		output reg [1:0]health,
 		output reg [9:0]x,
@@ -27,11 +27,8 @@ module brick_memory(
 			y <= 0;
 		end
 		else begin
-			x <= (address % gridx) * brickx;
-			y <= (address / gridx) * bricky;
 			health <= data;
 		end
-		
 	end
 	
 endmodule

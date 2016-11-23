@@ -50,8 +50,8 @@ module brickbreaker(
 	
 	//Constants and connective wires.
 	wire enable, inc_enable;
-	wire [9:0]ball_x, screen_x;
-	wire [9:0]ball_y, screen_y;
+	wire [9:0]ball_x, screen_x, grid_x, brick_x;
+	wire [9:0]ball_y, screen_y, grid_y, brick_y;
 	wire [9:0]size;
 	wire [39:0]delay;
 	
