@@ -24,3 +24,23 @@ module delay_counter(
 	assign d_enable = (q == 40'b0) ? 1 : 0;
 
 endmodule
+
+module counter(
+	input enable,
+	input clk,
+	input resetn,
+	
+	output reg [19:0]c_x
+	);
+	
+	always @ (posedge clk) begin
+		if(!resetn)
+			c_x <= 20'b0;
+			
+		else
+			if(enable)begin 
+				c_x = c_x + 1;
+			end
+	end
+
+endmodule
