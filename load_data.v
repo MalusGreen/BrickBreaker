@@ -15,15 +15,15 @@ endmodule
 module load_control(
 	input resetn,
 	input clk,
-	input done
+	input done,
+	
+	output reg count_enable
 	);
 	
 	reg current_state, next_state;
 	
 	localparam  S_LOADING 	= 1'd0,
 					S_DONE		= 1'd1;
-					
-
 					
 	always @(*)begin
 		case(current_state)
@@ -33,7 +33,10 @@ module load_control(
 	end
 	
 	always @(*)begin
-		
+		count_enable = 0;
+		if(!current_state)begin
+			count_enable = 1;
+		end
 	end
 	
 	// current_state registers
@@ -51,11 +54,22 @@ module load_datapath(
 	input clk,
 	input count_enable,
 	
+	input [39:0] delay,
 	input [9:0]selection,
 	
 	output done,
 	output [9:0]x_out, y_out,
 	output [9:0]address
+	);
+	
+	
+	
+	delaycounter loaddrawdelay(
+		.clk(clk),
+		.resetn(resetn),
+		.[39:0]delay(delay),
+	
+		.d_enable()
 	);
 	
 	counter loadcount(
