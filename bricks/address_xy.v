@@ -10,5 +10,6 @@ module address_xy(
 	always @(*) begin
 		x_out = (address_in % gridx) * width;
 		y_out = (address_in / gridx) * height;
+		address_out = (x_in / width) + ((y_in / height) * gridx);
 	end
 endmodule
