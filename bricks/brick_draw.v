@@ -2,20 +2,51 @@ module brick_draw(
 	input resetn,
 	input clk,
 	input go,
-	input load,
-	
+	input [1:0]health,
 	input [9:0]x_in, y_in, height, width,
 	
+	output writeEn,
+	output [9:0]x_out, y_out,
+	output [2:0]color
 	);
 	
-	ball_draw drawbrick(
+	rectangle_draw drawbrick(
 		.resetn(resetn),
 		.clk(clk),
 		.go(go),
 		.x_in(x_in),
+		.y_in(y_in),
+		.height(height),
+		.width(width),
 		
+		.writeEn(wren)
 	);
 	
+	brick_color(
+		.health(health),
+		.color(color)
+	);
+	
+endmodule
+
+module brick_color(
+	input [1:0]health,
+	output [2:0]color
+	);
+	
+	always @(*)begin
+		case(health)
+			2'b0:
+				color = 3'b000;
+			2'b1:
+				color = 3'b111;
+			2'b2:
+				color = 3'b101;
+			2'b3:
+				color = 3'b011;
+		endcase
+	end
+
 endmodule
 
 module rectangle_draw(
@@ -29,7 +60,6 @@ module rectangle_draw(
 	output writeEn,
 	output [9:0] x_out,
 	output [9:0] y_out,
-	output [2:0] colour
 	);
 	
 	wire ld_x, ld_y, inc_x, inc_y;
@@ -64,8 +94,6 @@ module rectangle_draw(
 		.x_out(x_out),
 		.y_out(y_out)
 	);
-	
-	assign colour = 3'b111;
 
 endmodule
 
