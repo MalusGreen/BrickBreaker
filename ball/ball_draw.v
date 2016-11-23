@@ -44,7 +44,7 @@ module ball_draw(
 		.y_out(y_out)
 	);
 	
-	assign colour = 3'b111;
+	assign colour = 3'b010;
 
 endmodule
 
