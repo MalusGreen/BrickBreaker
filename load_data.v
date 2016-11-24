@@ -72,6 +72,7 @@ module load_control(
 				S_DRAW:		next_state = (done_draw) ? S_LOAD : S_DRAW;
 				S_LOAD:		next_state = (done_all)  ? S_DONE : S_DRAWPREP;
 				S_DONE:		next_state = S_DONE;
+				default:		next_state = S_DONE;
 		endcase
 	end
 	

@@ -1,47 +1,47 @@
 module ball_logic(
 	input resetn,
 	input clk,
+	input logic_go,
 	
 	input [9:0]x, x_max,
 	input [9:0]y, y_max,
 	input [9:0]size,
+	input [9:0]brickx_in, bricky_in,
+	input [1:0]health,
 	
-	//Brick's info
-	input [1:0]brick_hp,
-	input [9:0]brick_x, brick_y,
-	input [9:0]brick_width, brick_height,
+	output [9:0]memx, memy,
+	output x_du, y_du
 	
-	//Platform info
-	input [9:0]plat_x, plat_y,
-	input [9:0]plat_width, plat_height,
+	output [9:0] col_x1, col_x2, col_y1, col_y2,
 	
-	output reg x_du,
-	output reg y_du,
-	
-	//Next block's info
-	output reg [9:0] next_brick_x, next_brick_y,
-	
-	//Whether or not a collision occured
-	output reg collision
-	
-	//Bricks' info
-//	input [1:0]lr_brick_hp, ud_brick_hp,
-//	input [9:0]lr_brick_x, lr_brick_y, ud_brick_x, ud_brick_y,
-//	input [9:0]lr_brick_width, lr_brick_height, ud_brick_width, ud_brick_height,
-	
-	//Next horizontal and vertical block info
-//	output reg [9:0]next_lr_brick_x, next_lr_brick_y, 
-//	output reg [9:0]next_ud_brick_x, next_ud_brick_y,
+	output reg collided_1, collided_2
 	);
 	
 	reg x_dir, y_dir;
 	
-	wire get_brick;
-	
-	ball_logic_control blc(
-		.clk(clk),
+	ball_collision(
 		.resetn(resetn),
-		.get_brick(get_brick)
+		.clk(clk),
+		.enable(logic_go),
+		
+		.x_du(x_du),
+		.y_du(y_du),
+		
+		.ballx(x),
+		.bally(y),
+		.brickx(brickx_in),
+		.bricky(bricky_in),
+		
+		.health(health),
+		
+		.memx(memx),
+		.memy(memy),
+		.col_x1(col_x1), 
+		.col_x2(col_x2), 
+		.col_y1(col_y1), 
+		.col_y2(col_y2),
+		.collided_1(collided_1), 
+		.collided_2(collided_2)
 	);
 	
 	always @(posedge clk)begin
@@ -53,114 +53,178 @@ module ball_logic(
 			case (x)
 				x_max - size:	x_dir = 0;
 				0				:  x_dir = 1;
-				default		:  x_dir = x_dir;
+				default		:  x_dir = (collided_2) ? ~x_dir: x_dir;
 			endcase
 			case (y)
 				y_max - size: y_dir = 0;
 				0				: y_dir = 1;
-				default		: y_dir = y_dir;
+				default		: y_dir = (collided_1) ? ~y_dir : y_dir;
 			endcase
-			
-			collision <= 0;
-			if(brick_hp > 2'b00) begin
-				collision <= 1;
-				if(!get_brick)
-					x_dir <= x_dir + 1;
-				else
-					y_dir <= y_dir + 1;
-			end
-			else begin
-				if(y_dir) begin
-				
-				end
-				else begin
-				
-				end
-			end
-			
-			// Checking for brick collision
-//			if(lr_brick_hp > 2'b00 | ud_brick_hp > 2'b00) begin
-//				collision <= 1;
-//				x_dir <= (lr_brick_hp > 2'b00) ? x_dir + 1 : x_dir;
-//				y_dir <= (ud_brick_hp > 2'b00) ? y_dir + 1 : y_dir;
-//			end 
-//			else
-//				collision <= 0;
 		end
 	end
 	
 	
-	always @(posedge clk)begin
-		x_du <= x_dir;
-		y_du <= y_dir;
-		
-		if(!get_brick) begin //Calculate x and y of horizontal brick
-			next_brick_x <= (x_dir == 1) ? x + size + 1 : x - 1;
-			next_brick_y <= y;
-		end
-		else begin //Calculate x and y f vertical block
-			next_brick_x <= x;
-			next_brick_y <= (y_dir == 1) ? y + size + 1 : y - 1;
-		end
-		
-//		//Calculate x and of y of next horizontal brick
-//		if(x_dir == 1)
-//			next_lr_brick_x <= x + 1;
-//		else 
-//			next_lr_brick_x <= x - 1;
-//				
-//		next_lr_brick_y <= y;
-//		
-//		//Calculate x and of y of next vertical brick
-//		if(y_dir == 1)
-//			next_du_brick_y <= y + 1;
-//		else 
-//			next_du_brick_y <= y - 1;
-//			
-//		next_du_brick_x <= x;	
-	end
+	assign	x_du = x_dir;
+	assign	y_du = y_dir;
 	
 endmodule
 
-module ball_logic_control(
-	input clk,
+module ball_collision(
 	input resetn,
-	output reg get_brick
-	);
-	
-	reg current_state, next_state;
+	input clk,
+	input enable,
 
-	localparam 	S_GET_LR_BRICK	= 1'd0, //Get horizontal brick
-					S_GET_UD_BRICK = 1'd1; //Get vertical brick
+	input x_du,
+	input y_du,
+	input [9:0]ballx, bally,
+	input [9:0]brickx, bricky,
+	input [1:0]health,
+	
+	output reg [9:0] memx, memy,
+	output reg [9:0] col_x1, col_x2, col_y1, col_y2,
+	output reg collided_1, collided_2
+	);
+
+	reg [4:0]current_state, next_state;
+	
+	localparam 	S_WAIT		= 3'd0,
+					S_LOAD_1		= 4'd1,
+					S_YLEFT		= 3'd2,
+					S_LOAD_2		= 4'd3,
+					S_YRIGHT		= 3'd4,
+					S_LOAD_3		= 4'd5,
+					S_XUP			= 3'd6,
+					S_LOAD_4		= 4'd7,
+					S_XDOWN 		= 3'd8;
 					
 	always @(*)
    begin: state_table 
 			case (current_state)
-					S_GET_LR_BRICK: next_state = S_GET_UD_BRICK;
-					S_GET_UD_BRICK: next_state = S_GET_LR_BRICK;
-            default:     next_state = S_GET_LR_BRICK;
+					S_WAIT		: next_state = (enable) ? S_LOAD_1 : S_WAIT;
+					S_LOAD_1		: next_state = S_YLEFT;
+					S_YLEFT		: next_state = S_LOAD_2;
+					S_LOAD_2		: next_state = (collided_1) ? S_LOAD_3 : S_YRIGHT;
+					S_YRIGHT		: next_state = S_LOAD_3;
+					S_LOAD_3		: next_state = S_XUP;
+					S_XUP			: next_state = S_LOAD_4;
+					S_LOAD_4		: next_state = (collided_2) ? S_WAIT : S_XDOWN;
+					S_XDOWN 		: next_state = S_WAIT;
+            default:     	next_state = S_WAIT;
         endcase
    end // state_table
-	 
-	 always @(*)
-    begin: enable_signals
-		  get_brick = 0;
-        case (current_state)
-				S_GET_UD_BRICK:
-					get_brick = 0;
-            S_GET_UD_BRICK:
-					get_brick = 1;
-        // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
-        endcase
-    end // enable_signals
-	 
 	 // current_state registers
-    always@(posedge clk)
-    begin: state_FFs
-        if(!resetn)
-            current_state <= S_GET_LR_BRICK;
-        else
-				current_state <= next_state;
-    end // state_FFS
+   
+	assign ball_yedge = (y_du) ? (bally + size) : bally;
+	assign ball_xedge = (x_du) ? (ballx + size) : ballx;
 	
+	always @(*)begin
+		col_x1 = 0;
+		col_x2 = 0;
+		col_y1 = 0;
+		col_y2 = 0;
+		collided_1 = 0;
+		collided_2 = 0;
+		memx = 0;
+		memy = 0;
+		
+		case(current_state)
+				S_LOAD_1		:begin
+					memx <= ballx;
+					memy <= ball_yedge;
+				end
+				S_YLEFT		:begin
+					if(|health)begin
+						collided_1 = 1;
+						col_x1 <= brickx;
+						col_y1 <= bricky;
+					end
+				end
+				S_LOAD_2		:begin
+					memx <= ballx + `BRICKX;
+					memy <= ball_yedge;
+				end
+				S_YRIGHT	:begin
+					if(|health)begin
+						collided_1 = 1;
+						col_x1 <= brickx;
+						col_y1 <= bricky;
+					end
+				end
+				S_LOAD_3		:begin
+					memx <= ball_xedge;
+					memy <= bally;
+				end
+				S_XUP	:begin
+					if(|health)begin
+						collided_2 = 1;
+						col_x2 <= brickx;
+						col_y2 <= bricky;
+					end
+				end
+				S_LOAD_4		:begin
+					memx <= ball_xedge;
+					memy <= bally + `BRICKY;
+				end
+				S_XDOWN :begin
+					if(|health)begin
+						collided_2 = 1;
+						col_x2 <= brickx;
+						col_y2 <= bricky;
+					end
+				end
+		endcase
+	end
+	
+	always@(posedge clk)
+   begin: state_FFs
+       if(!resetn)
+            current_state <= S_WAIT;
+       else
+				current_state <= next_state;
+   end // state_FFS	
 endmodule
+
+
+
+//module ball_logic_control(
+//	input clk,
+//	input resetn,
+//	output reg get_brick
+//	);
+//	
+//	reg current_state, next_state;
+//
+//	localparam 	S_GET_LR_BRICK	= 1'd0, //Get horizontal brick
+//					S_GET_UD_BRICK = 1'd1; //Get vertical brick
+//					
+//	always @(*)
+//   begin: state_table 
+//			case (current_state)
+//					S_GET_LR_BRICK: next_state = S_GET_UD_BRICK;
+//					S_GET_UD_BRICK: next_state = S_GET_LR_BRICK;
+//            default:     next_state = S_GET_LR_BRICK;
+//        endcase
+//   end // state_table
+//	 
+//	 always @(*)
+//    begin: enable_signals
+//		  get_brick = 0;
+//        case (current_state)
+//				S_GET_UD_BRICK:
+//					get_brick = 0;
+//            S_GET_UD_BRICK:
+//					get_brick = 1;
+//        // default:    // don't need default since we already made sure all of our outputs were assigned a value at the start of the always block
+//        endcase
+//    end // enable_signals
+//	 
+//	 // current_state registers
+//    always@(posedge clk)
+//    begin: state_FFs
+//        if(!resetn)
+//            current_state <= S_GET_LR_BRICK;
+//        else
+//				current_state <= next_state;
+//    end // state_FFS
+//	
+//endmodule
