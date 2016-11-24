@@ -22,7 +22,7 @@ module ball_logic(
 	output reg [9:0] next_brick_x, next_brick_y,
 	
 	//Whether or not a collision occured
-	output reg collision;
+	output reg collision
 	
 	//Bricks' info
 //	input [1:0]lr_brick_hp, ud_brick_hp,
@@ -36,7 +36,7 @@ module ball_logic(
 	
 	reg x_dir, y_dir;
 	
-	reg get_brick;
+	wire get_brick;
 	
 	ball_logic_control blc(
 		.clk(clk),
@@ -125,7 +125,7 @@ endmodule
 module ball_logic_control(
 	input clk,
 	input resetn,
-	output reg get_brick;
+	output reg get_brick
 	);
 	
 	reg current_state, next_state;

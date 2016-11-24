@@ -3,7 +3,7 @@ module brick_draw(
 	input clk,
 	input go,
 	input [1:0]health,
-	input [9:0]x_in, y_in, height, width,
+	input [9:0]x_in, y_in,
 	
 	output writeEn,
 	output [9:0]x_out, y_out,
@@ -16,8 +16,6 @@ module brick_draw(
 		.go(go),
 		.x_in(x_in),
 		.y_in(y_in),
-		.height(height),
-		.width(width),
 		
 		.writeEn(wren)
 	);
@@ -31,18 +29,18 @@ endmodule
 
 module brick_color(
 	input [1:0]health,
-	output [2:0]color
+	output reg[2:0]color
 	);
 	
 	always @(*)begin
 		case(health)
-			2'b0:
+			2'd0:
 				color = 3'b000;
-			2'b1:
+			2'd1:
 				color = 3'b111;
-			2'b2:
+			2'd2:
 				color = 3'b101;
-			2'b3:
+			2'd3:
 				color = 3'b011;
 		endcase
 	end
@@ -55,17 +53,17 @@ module rectangle_draw(
 	
 	input go,			//loads when 1, draws when 0
 	input [9:0] x_in,
-	input [9:0] y_in, height, width,
+	input [9:0] y_in,
 	
 	output writeEn,
 	output [9:0] x_out,
-	output [9:0] y_out,
+	output [9:0] y_out
 	);
 	
 	wire ld_x, ld_y, inc_x, inc_y;
 	wire finished_col, finished_all;
 	
-	b_control c0(
+	br_control c0(
 		.clk(clk),
 		.resetn(resetn),
 		.go(go),
@@ -78,13 +76,11 @@ module rectangle_draw(
 		.wren(writeEn)
 	);
 	
-	b_datapath D0(
+	br_datapath D0(
 		.clk(clk),
 		.resetn(resetn),
 		.x_in(x_in),
 		.y_in(y_in),
-		.height(height),
-		.width(width),
 		.finished_col(finished_col),
 		.finished_all(finished_all),
 		.ld_x(ld_x),
@@ -97,7 +93,7 @@ module rectangle_draw(
 
 endmodule
 
-module b_control(
+module br_control(
 	input clk,
 	input resetn,
 	input go,
@@ -161,10 +157,10 @@ module b_control(
 	 
 endmodule
 
-module b_datapath(
+module br_datapath(
 	input clk,
 	input resetn,
-	input [9:0]x_in, y_in, height, width
+	input [9:0]x_in, y_in,
 	input ld_x, ld_y, inc_x, inc_y,
 	output reg [9:0]x_out,
 	output reg [9:0]y_out,
@@ -187,21 +183,21 @@ module b_datapath(
 		else begin
 			if(ld_x)begin
 				x  <= x_in;
-				qx <= width - 1;
+				qx <= `BRICKX - 1;
 				finished_col <= 0;
 				finished_all <= 0;
 			end
 			
 			if(ld_y)begin
 				y  <= y_in;
-				qy <= height - 1;
+				qy <= `BRICKY - 1;
 				finished_col <= 0;
 				finished_all <= 0;
 			end
 			
 			if(inc_x)begin
 				qx <= qx - 1;
-				qy <= height - 1;
+				qy <= `BRICKY - 1;
 				if(qx - 1 == 10'd0)
 					finished_all <= 1;
 				

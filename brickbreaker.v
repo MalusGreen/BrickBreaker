@@ -8,6 +8,14 @@
 //`include "vga_adapter.v"
 //`include "platform.v"
 
+`define GRIDX 10'd16
+`define GRIDY 10'd4
+`define BRICKNUM 20'd64
+`define BRICKX 10'd4
+`define BRICKY 10'd2
+`define BRICKDRAW 20'd16
+
+
 module brickbreaker(
 		CLOCK_50,						//	On Board 50 MHz
 	// Your inputs and outputs here
@@ -82,7 +90,62 @@ module brickbreaker(
 		.inc_enable(inc_enable)
 	);
 	
+	wire load, game_write, load_select;
+	wire [9:0]load_x, game_mx, game_my, load_y;
+	wire [9:0]load_address;
+	wire [1:0]load_health, game_health;
+	
+	load_data ld(
+		.resetn(resetn),
+		.clk(clk),
+		.selection(SW[9:0]),
+		
+		.load(load),
+		.select(load_select),
+		.x_out(load_x),
+		.y_out(load_y),
+		.address(load_address),
+		.health(load_health),
+	);
+	
+	//* LOAD DATA LOGIC AREA *//
+	
+	wire [9:0]mem_x_in, mem_y_in, mem_x_out, mem_y_out;
+	wire [1:0]mem_health;
+	wire mem_write;
+	
+	
+//			.go(go_brick),
+//			.health(health),
+//			.x_in(brick_x),
+//			.y_in(brick_y),
+
+	assign mem_x_in  	= (load_select) ? game_mx : load_x;
+	assign mem_y_in  	= (load_select) ? game_my : load_y;
+	assign mem_health = (load_select) ? game_health : load_health;
+	assign mem_write 	= (load_select) ? game_write: load;
+	
+	//FIX LOAD
+	assign go_brick 	= (load_select) ? load : load;
+	assign health 		= (load_select) ? mem_health : load_health;
+	assign brick_x		= (load_select) ? mem_x_out : load_x;
+	assign brick_y		= (load_select) ? mem_y_out : load_y;
+	
+	//* LOAD DATA LOGIC AREA *//
+	
+	
 	//game_logic
+	brick_memory(
+		.clk(clk),
+		.resetn(resetn),
+		.x_in(mem_x_in),
+		.y_in(mem_y_in),
+		.wren(mem_write),
+		.health(mem_health),
+		.x(mem_x_out),
+		.y(mem_y_out)
+	);
+	
 	ball_logic balllogic(
 		.resetn(resetn),
 		.clk(CLOCK_50),
@@ -117,11 +180,6 @@ module brickbreaker(
 	wire [2:0]colour_vga;
 	wire writeEn_vga;
 	
-	assign brick_dx = 10'd0;
-	assign brick_dy = 10'd0;
-	assign brick_en = 1'b0;
-	assign brick_colour = 3'd0;
-	
 	//drawfunctions
 	ball_draw balldraw(
 		.resetn(resetn),
@@ -137,6 +195,23 @@ module brickbreaker(
 		.y_out(ball_dy),
 		.colour(ball_colour)
 	);
+	
+	/*  BRICK MODULE LOCATION  */
+	
+		brick_draw(
+			.resetn(resetn),
+			.clk(clk),
+			.go(go_brick),
+			.health(health),
+			.x_in(brick_x),
+			.y_in(brick_y),
+			
+			
+			.writeEn(brick_en),
+			.x_out(brick_dx),
+			.y_out(brick_dy),
+			.color(brick_colour)
+		);
 	
 	platform platlog(
 		.clk(CLOCK_50),
@@ -428,22 +503,4 @@ module draw_mux(
 	
 endmodule
 
-module counter(
-	input enable,
-	input clk,
-	input resetn,
-	
-	output reg [19:0]c_x
-	);
-	
-	always @ (posedge clk) begin
-		if(!resetn)
-			c_x <= 20'b0;
-			
-		else
-			if(enable)begin 
-				c_x = c_x + 1;
-			end
-	end
 
-endmodule
