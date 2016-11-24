@@ -87,13 +87,14 @@ module ball_platform(
 	
 	always @(*)begin
 		collided = 0;
-		
-		if(ballx < (playx + `PLATX))begin
-			collided = 1;
-		end
-		
-		if(ball_xedge > platx)begin
-			collided = 1;
+		if(goingdown)begin
+			if(ballx < (playx + `PLATX))begin
+				collided = 1;
+			end
+			
+			if(ball_xedge > platx)begin
+				collided = 1;
+			end
 		end
 	end
 	
