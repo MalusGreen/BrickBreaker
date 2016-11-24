@@ -6,7 +6,7 @@ module ball_logic(
 	input [9:0]x, x_max,
 	input [9:0]y, y_max,
 	input [9:0]size,
-	input [9:0]brickx_in, bricky_in,
+	input [9:0]brickx_in, bricky_in, platx,
 	input [1:0]health,
 	
 	output [9:0]memx, memy,
@@ -64,8 +64,38 @@ module ball_logic(
 	end
 	
 	
+	
 	assign	x_du = x_dir;
 	assign	y_du = y_dir;
+	
+endmodule
+
+module ball_platform(
+	input resetn,
+	input clk,
+	input enable,
+	
+	input goingdown,
+	
+	input [9:0]ballx,
+	input [9:0]platx,
+	
+	output collided
+	);
+	wire [9:0]ball_xedge;
+	assign ball_xedge = (ballx + size);
+	
+	always @(*)begin
+		collided = 0;
+		
+		if(ballx < (playx + `PLATX))begin
+			collided = 1;
+		end
+		
+		if(ball_xedge > platx)begin
+			collided = 1;
+		end
+	end
 	
 endmodule
 
@@ -114,8 +144,8 @@ module ball_collision(
    end // state_table
 	 // current_state registers
    
-	assign ball_yedge = (y_du) ? (bally + size) : bally;
-	assign ball_xedge = (x_du) ? (ballx + size) : ballx;
+	assign [9:0]ball_yedge = (y_du) ? (bally + size) : bally;
+	assign [9:0]ball_xedge = (x_du) ? (ballx + size) : ballx;
 	
 	always @(*)begin
 		col_x1 = 0;

@@ -14,6 +14,8 @@
 `define BRICKX 10'd4
 `define BRICKY 10'd2
 `define BRICKDRAW 20'd16
+`define PLATY 10'd64
+`define PLATSIZE 10'd20
 
 
 module brickbreaker(

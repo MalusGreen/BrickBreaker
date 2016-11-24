@@ -15,7 +15,7 @@ module platform(
 	wire ld_x, inc_x;
 	wire finished_row;
 	
-	wire [9:0] size = 10'd20;
+	wire [9:0] size = `PLATSIZE;
 	assign colour = 3'b100;
 	
 	control c(
@@ -126,7 +126,7 @@ module datapath(
 		if(!resetn) begin
 			x  <= 10'd32;
 			qx <= 10'd0;
-			y  <= 10'd64;
+			y  <= `PLATY;
 			finished_row <= 0;
 		end
 		else begin
