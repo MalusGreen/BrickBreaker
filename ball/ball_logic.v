@@ -14,10 +14,24 @@ module ball_logic(
 	
 	output [9:0] col_x1, col_x2, col_y1, col_y2,
 	
-	output reg collided_1, collided_2
+	output collided_1, collided_2
 	);
 	
 	reg x_dir, y_dir;
+	wire plat_collided;
+	
+	ball_platform(
+		.resetn(resetn),
+		.clk(clk),
+		.enable(logic_go),
+	
+		.goingdown(y_du),
+	
+		.ballx(x),
+		.platx(platx),
+	
+		.collided(plat_collided)
+	);
 	
 	ball_collision(
 		.resetn(resetn),
@@ -58,7 +72,7 @@ module ball_logic(
 			case (y)
 				y_max - size: y_dir = 0;
 				0				: y_dir = 1;
-				default		: y_dir = (collided_1) ? ~y_dir : y_dir;
+				default		: y_dir = (plat_collided | collided_1) ? ~y_dir : y_dir;
 			endcase
 		end
 	end
@@ -88,7 +102,7 @@ module ball_platform(
 	always @(*)begin
 		collided = 0;
 		if(goingdown)begin
-			if(ballx < (playx + `PLATX))begin
+			if(ballx < (platx + `PLATX))begin
 				collided = 1;
 			end
 			

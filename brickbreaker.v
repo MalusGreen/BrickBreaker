@@ -60,7 +60,7 @@ module brickbreaker(
 	
 	//Constants and connective wires.
 	wire enable, inc_enable;
-	wire [9:0]ball_x, screen_x, grid_x, brick_x;
+	wire [9:0]ball_x, screen_x, grid_x, brick_x, col_x1;
 	wire [9:0]ball_y, screen_y, grid_y, brick_y;
 	wire [9:0]size;
 	wire [39:0]delay;
@@ -96,6 +96,8 @@ module brickbreaker(
 	wire [9:0]load_x, game_mx, game_my, load_y;
 	wire [9:0]load_address;
 	wire [1:0]load_health, game_health;
+	
+	wire [9:0]platx_for_real;
 	
 	load_data ld(
 		.resetn(resetn),
@@ -148,6 +150,9 @@ module brickbreaker(
 		.y(mem_y_out)
 	);
 	
+	wire [9:0] col_x1, col_x2, col_y1, col_y2;
+	wire col_1, col_2;
+	
 	ball_logic balllogic(
 		.resetn(resetn),
 		.clk(CLOCK_50),
@@ -159,7 +164,22 @@ module brickbreaker(
 		.x_max(screen_x),
 		.y(ball_y),
 		.y_max(screen_y),
-		.size(size)
+		.size(size),
+		.brickx_in(mem_x_out),
+		.bricky_in(mem_y_out),
+		.platx(platx_for_real),
+		.health(mem_health),
+	
+		.memx(game_mx), 
+		.memy(game_my),
+	
+		.col_x1(col_x1), 
+		.col_x2(col_x2), 
+		.col_y1(col_y1), 
+		.col_y2(col_y2),
+	
+		.collided_1(col_1), 
+		.collided_2(col_2)
 	);
 	
 	ball_pos ballpos(
@@ -226,7 +246,9 @@ module brickbreaker(
 		.x(plat_dx),
 		.y(plat_dy),
 		.colour(plat_colour),
-		.writeEn(plat_en)
+		.writeEn(plat_en),
+		
+		.d_x(platx_for_real)
 	);
 	
 	//MUX

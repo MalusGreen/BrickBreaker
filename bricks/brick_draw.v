@@ -1,3 +1,48 @@
+module brick_fsm(
+	input resetn,
+	input clk,
+	input go,
+	
+	input [9:0] col_x1, col_x2, col_y1, col_y2,
+	
+	input collided_1, collided_2
+	
+	output [9:0]brickx, bricky,
+	output go_draw
+);
+	reg [2:0]current_state, next_state;
+	
+	wire [19:0]count, delay;
+	wire delay_reset;
+	
+	localparam	S_WAIT	=	3'd0;
+					S_LOAD1	=	3'd1;
+					S_DRAW1	=	3'd2;
+					S_LOAD2	=	3'd3;
+					S_DRAW2	=	3'd4;
+	
+	counter brickdrawdelay(
+		.enable(1'b1),
+		.clk(clk),
+		.resetn(delay_reset),
+		
+		.c_x(count)
+	);
+	
+	always @(*)begin
+		case(current_state)
+				S_WAIT	:	next_state = (go) ? S_LOAD1 : S_WAIT;
+				S_LOAD1	:	next_state = S_DRAW1;
+				S_DRAW1	:	next_state = (count == `BRICKDRAW) S_LOAD2 : S_DRAW1;
+				S_LOAD2	:	next_state = S_DRAW2;
+				S_DRAW2	:	next_state = (count == `BRICKDRAW) S_WAIT : S_DRAW2;
+				default: next_state = S_WAIT;
+		endcase
+	end
+	
+	
+endmodule
+
 module brick_draw(
 	input resetn,
 	input clk,

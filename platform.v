@@ -5,7 +5,7 @@ module platform(
 	input right,
 	input enable,
 	input draw,
-	output [9:0]x, y,
+	output [9:0]actual_x, x, y,
 	output [2:0] colour,
 	output writeEn,
 	
