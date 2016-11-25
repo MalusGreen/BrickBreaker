@@ -11,25 +11,23 @@
 //`include "brick_memory.v"
 //`include "brick_draw.v"
 //`include "address_xy.v"
-//`include "memory.v"
 //`include "memory_bb.v"
 
-//HOME
-`include "ball/ball_pos.v"
-`include "ball/ball_draw.v"
-`include "ball/ball_logic.v"
-`include "delay_counter.v"
-//`include "vga_pll.v"
-//`include "vga_controller.v"
-//`include "vga_address_translator.v"
-//`include "vga_adapter.v"
-`include "platform.v"
-`include "load_data.v"
-`include "bricks/brick_memory.v"
-`include "bricks/brick_draw.v"
-`include "bricks/address_xy.v"
-`include "memory.v"
-`include "memory_bb.v"
+////HOME
+//`include "ball/ball_pos.v"
+//`include "ball/ball_draw.v"
+//`include "ball/ball_logic.v"
+//`include "delay_counter.v"
+////`include "vga_pll.v"
+////`include "vga_controller.v"
+////`include "vga_address_translator.v"
+////`include "vga_adapter.v"
+//`include "platform.v"
+//`include "load_data.v"
+//`include "bricks/brick_memory.v"
+//`include "bricks/brick_draw.v"
+//`include "bricks/address_xy.v"
+//`include "memory_bb.v"
 
 `ifndef macros_vh
 // NOTE: for Verilog 1995 `ifndef is not supported use `ifdef macros_vh `else
@@ -151,7 +149,7 @@ module brickbreaker(
 	//* LOAD DATA LOGIC AREA *//
 	
 	wire [9:0]mem_x_in, mem_y_in, mem_x_out, mem_y_out;
-	wire [1:0]mem_health, brick_health;
+	wire [1:0]mem_in_health, mem_out_health, brick_health;
 	wire mem_write;
 	
 	wire [9:0]fsm_brick_x, fsm_brick_y;
@@ -159,15 +157,15 @@ module brickbreaker(
 //			.health(health),
 //			.x_in(brick_x),
 //			.y_in(brick_y),
-
-	assign mem_x_in  	= (load_select) ? game_mx : load_x;
-	assign mem_y_in  	= (load_select) ? game_my : load_y;
-	assign mem_health = (load_select) ? game_health : load_health;
-	assign mem_write 	= (load_select) ? game_write: load_draw;
+	
+	assign mem_x_in  			= (load_select) ? game_mx : load_x;
+	assign mem_y_in  			= (load_select) ? game_my : load_y;
+	assign mem_in_health 	= (load_select) ? game_health : load_health;
+	assign mem_write 			= (load_select) ? game_write: load_draw;
 	
 	//FIX LOAD
 	assign go_bricks 		= (load_select) ? fsm_brick_draw : load_draw;
-	assign brick_health 	= (load_select) ? mem_health : load_health;
+	assign brick_health 	= (load_select) ? mem_out_health : load_health;
 	assign brick_x			= (load_select) ? fsm_brick_x : load_x;
 	assign brick_y			= (load_select) ? fsm_brick_y : load_y;
 	
@@ -176,14 +174,14 @@ module brickbreaker(
 	
 	//game_logic
 	brick_memory bm(
-		.clk(clk),
+		.clk(CLOCK_50),
 		.resetn(resetn),
 		.x_in(mem_x_in),
 		.y_in(mem_y_in),
 		.wren(mem_write),
-		.health_in(mem_health),
+		.health_in(mem_in_health),
 		
-		.health(brick_health),
+		.health(mem_out_health),
 		.x(mem_x_out),
 		.y(mem_y_out)
 	);
@@ -261,7 +259,7 @@ module brickbreaker(
 	
 	brick_fsm bfsm(
 		.resetn(resetn),
-		.clk(clk),
+		.clk(CLOCK_50),
 		.go(go_bricks_fsm),
 		
 		.col_x1(col_x1), 
@@ -400,7 +398,7 @@ module draw_fsm(
 	assign ball_delay 	= 20'd30;
 	assign brick_delay	= `BRICKDRAWTWO;
 	assign plat_delay 	= 20'd10;
-	assign logic_delay  	= 20'd10;
+	assign logic_delay  	= 20'd12;
 	
 	wire [19:0]count;
 	

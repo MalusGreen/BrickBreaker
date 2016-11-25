@@ -78,29 +78,39 @@ module ball_logic(
 		.collided_2(collided_2)
 	);
 	
-	always @(posedge collided_1, plat_collided)begin
-		y_dir = ~y_dir;
-	end
-	
-	always @(posedge collided_2)begin
-		x_dir = ~x_dir;
-	end
+	reg logic_x, logic_y;
 	
 	always @(posedge clk)begin
 		if(!resetn) begin
 			x_dir <= 0;
 			y_dir <= 0;
+			logic_x <= 0;
+			logic_y <= 0;
 		end
 		else begin
+			if(logic_go) begin
+				logic_x = 1'b1;
+				logic_y = 1'b1;
+			end
 			case (x)
 				x_max - size:	x_dir = 0;
 				0				:  x_dir = 1;
-				default		:  x_dir = x_dir;
+				default		:  begin
+					if(logic_x & collided_2) begin
+						x_dir = ~x_dir;
+						logic_x = 0;
+					end
+				end
 			endcase
 			case (y)
 				y_max - size: y_dir = 0;
 				0				: y_dir = 1;
-				default		: y_dir = y_dir;
+				default		: begin 
+					if(logic_y & (collided_1 | plat_collided)) begin
+						y_dir = ~y_dir;
+						logic_y = 0;
+					end
+				end
 			endcase
 		end
 	end
@@ -160,19 +170,22 @@ module ball_collision(
 
 	reg [3:0]current_state, next_state;
 	
-	localparam 	S_WAIT		= 4'd0,
-					S_LOAD_1		= 4'd1,
-					S_YLEFT		= 4'd2,
-					S_LOAD_2		= 4'd3,
-					S_YRIGHT		= 4'd4,
-					S_LOAD_3		= 4'd5,
-					S_XUP			= 4'd6,
-					S_LOAD_4		= 4'd7,
-					S_XDOWN 		= 4'd8;
+	localparam 	
+					S_SETUP		= 4'd0,
+					S_WAIT		= 4'd1,
+					S_LOAD_1		= 4'd2,
+					S_YLEFT		= 4'd3,
+					S_LOAD_2		= 4'd4,
+					S_YRIGHT		= 4'd5,
+					S_LOAD_3		= 4'd6,
+					S_XUP			= 4'd7,
+					S_LOAD_4		= 4'd8,
+					S_XDOWN 		= 4'd9;
 					
 	always @(*)
    begin: state_table 
 			case (current_state)
+					S_SETUP		: next_state = S_WAIT;
 					S_WAIT		: next_state = (enable) ? S_LOAD_1 : S_WAIT;
 					S_LOAD_1		: next_state = S_YLEFT;
 					S_YLEFT		: next_state = S_LOAD_2;
@@ -187,22 +200,24 @@ module ball_collision(
    end // state_table
 	 // current_state registers
    
-	wire [9:0]ball_xedge, ball_yedge;
+	wire ball_yedge, ball_xedge;
 	
 	assign ball_yedge = (y_du) ? (bally + size) : bally;
 	assign ball_xedge = (x_du) ? (ballx + size) : ballx;
 	
 	always @(*)begin
-		col_x1 = 0;
-		col_x2 = 0;
-		col_y1 = 0;
-		col_y2 = 0;
-		collided_1 = 0;
-		collided_2 = 0;
 		memx = 0;
 		memy = 0;
-		
 		case(current_state)
+				S_SETUP: begin
+					col_x1 = 0;
+					col_x2 = 0;
+					col_y1 = 0;
+					col_y2 = 0;
+					
+					collided_1 = 0;
+					collided_2 = 0;
+				end
 				S_LOAD_1		:begin
 					memx <= ballx;
 					memy <= ball_yedge;
@@ -252,8 +267,8 @@ module ball_collision(
 	
 	always@(posedge clk)
    begin: state_FFs
-       if(!resetn)
-            current_state <= S_WAIT;
+       if(!resetn) 
+            current_state <= S_SETUP;
        else
 				current_state <= next_state;
    end // state_FFS	
