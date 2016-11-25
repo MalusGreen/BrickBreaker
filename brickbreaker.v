@@ -28,28 +28,7 @@
 `include "bricks/brick_draw.v"
 `include "bricks/address_xy.v"
 `include "memory.v"
-
-`ifndef macros_vh
-// NOTE: for Verilog 1995 `ifndef is not supported use `ifdef macros_vh `else
-// HARD CODED FILES:
-//	load_data.v
-// platform.v
-// ball_logic
-`define macros_vh
-/**************
-* your macros *
-* `define ... *
-***************/
-`define GRIDX 10'd16
-`define GRIDY 10'd4
-`define BRICKNUM 20'd64
-`define BRICKX 10'd4
-`define BRICKY 10'd2
-`define BRICKDRAW 20'd16
-`define BRICKDRAWTWO 20'd32
-`define PLATY 10'd64
-`define PLATSIZE 10'd20
-`endif
+`include "macros.v"
 
 
 module brickbreaker(
@@ -107,8 +86,8 @@ module brickbreaker(
 	assign screen_y = 10'd240 - 1;
 //	assign delay = 40'd833333;
 //	assign delay = 40'd1666666;
-	assign delay = 40'd64;
-	assign size = 10'd10;
+	assign delay = 40'd200;
+	assign size = `BALLSIZE;
 	
 	//draw fsm
 	
@@ -160,9 +139,6 @@ module brickbreaker(
 	
 	//temp assign gamehealth and gamewrite
 	
-	assign game_write = 0;
-	assign game_health = 0;
-	
 	assign mem_x_in  			= (load_select) ? game_mx : load_x;
 	assign mem_y_in  			= (load_select) ? game_my : load_y;
 	assign mem_in_health 	= (load_select) ? game_health : load_health;
@@ -211,7 +187,9 @@ module brickbreaker(
 		.bricky_in(mem_y_out),
 		.platx(platx_for_real),
 		.health(brick_health),
-	
+		
+		.game_health(game_health),
+		.game_write(game_write),
 		.memx(game_mx),
 		.memy(game_my),
 	
@@ -362,7 +340,7 @@ module brickbreaker(
 	//delay
 	delay_counter delaycounter(
 		.clk(CLOCK_50),
-		.resetn(resetn),
+		.resetn(resetn & load_select),
 		.delay(delay),
 		
 		.d_enable(enable)
@@ -393,7 +371,7 @@ module draw_fsm(
 					S_PLAT_DRAW		= 4'd6,
 					S_INC				= 4'd7,
 					S_INC_DELAY		= 4'd8,
-					S_CHANGE			= 4'd8;
+					S_CHANGE			= 4'd9;
 					
 	//CONSTANTS AND COUNTER VARIABLES
 	reg delay_reset, changecolour;
@@ -420,7 +398,7 @@ module draw_fsm(
 				S_FSM_WAIT: next_state = (enable | iscolour) ? S_BALL_LOAD : S_FSM_WAIT;
 				S_BALL_LOAD: next_state = S_BALL_DRAW;
 				S_BALL_DRAW: next_state = (count == delay) ? S_BRICKS_LOAD : S_BALL_DRAW;
-				S_BRICKS_LOAD: next_state = S_BRICKS_DRAW;
+				S_BRICKS_LOAD: next_state = (iscolour) ? S_BRICKS_DRAW : S_PLAT_LOAD;
 				S_BRICKS_DRAW: next_state = (count == delay) ? S_PLAT_LOAD : S_BRICKS_DRAW;
 				S_PLAT_LOAD: next_state = S_PLAT_DRAW;
 				S_PLAT_DRAW: next_state = (count == delay) ? S_INC : S_PLAT_DRAW;
@@ -476,6 +454,7 @@ module draw_fsm(
 			S_INC: begin
 				if(~iscolour)
 					inc_enable = 1;
+				delay_reset = 0;
 			end
 			S_INC_DELAY:begin
 				if(~iscolour)

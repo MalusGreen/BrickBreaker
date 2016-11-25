@@ -1,21 +1,5 @@
-`ifndef macros_vh
-// NOTE: for Verilog 1995 `ifndef is not supported use `ifdef macros_vh `else
-`define macros_vh
-/**************
-* your macros *
-* `define ... *
-***************/
-`define GRIDX 10'd16
-`define GRIDY 10'd4
-`define BRICKNUM 20'd64
-`define BRICKX 10'd4
-`define BRICKY 10'd2
-`define BRICKDRAW 20'd16
-`define BRICKDRAWTWO 20'd32
-`define PLATY 10'd64
-`define PLATSIZE 10'd20
-`endif
 
+`include "macros.v"
 module load_data(
 	input resetn,
 	input clk,
@@ -232,6 +216,10 @@ module level_one(
 			20'd4:
 				health = 2'd3;
 			20'd5:
+				health = 2'd1;
+			20'd17:
+				health = 2'd1;
+			20'd33:
 				health = 2'd1;
 			default:
 				health = 2'd0;

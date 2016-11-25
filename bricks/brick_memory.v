@@ -13,12 +13,14 @@ module brick_memory(
 	
 	wire [9:0]address;
 	
+	wire [9:0]x_carryout, y_carryout;
+	
 	address_xy memorychange(
 		.x_in(x_in),
-		.x_out(),
+		.x_out(x_carryout),
 		.y_in(y_in),
-		.y_out(),
-		.address_in(),
+		.y_out(y_carryout),
+		.address_in(address),
 		.address_out(address)
 	);
 	
@@ -38,6 +40,8 @@ module brick_memory(
 		end
 		else begin
 			health <= data;
+			x = x_carryout;
+			y = y_carryout;
 		end
 	end
 	
