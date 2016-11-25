@@ -14,6 +14,7 @@
 `define BRICKX 10'd4
 `define BRICKY 10'd2
 `define BRICKDRAW 20'd16
+`define BRICKDRAW2 20'd32
 `define PLATY 10'd64
 `define PLATSIZE 10'd20
 
@@ -170,15 +171,15 @@ module brickbreaker(
 		.platx(platx_for_real),
 		.health(mem_health),
 	
-		.memx(game_mx), 
+		.memx(game_mx),
 		.memy(game_my),
 	
-		.col_x1(col_x1), 
-		.col_x2(col_x2), 
-		.col_y1(col_y1), 
+		.col_x1(col_x1),
+		.col_x2(col_x2),
+		.col_y1(col_y1),
 		.col_y2(col_y2),
 	
-		.collided_1(col_1), 
+		.collided_1(col_1),
 		.collided_2(col_2)
 	);
 	

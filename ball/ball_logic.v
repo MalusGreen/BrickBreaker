@@ -26,7 +26,7 @@ module ball_logic(
 		.enable(logic_go),
 	
 		.goingdown(y_du),
-	
+		.size(size),
 		.ballx(x),
 		.platx(platx),
 	
@@ -37,6 +37,8 @@ module ball_logic(
 		.resetn(resetn),
 		.clk(clk),
 		.enable(logic_go),
+		
+		.size(size),
 		
 		.x_du(x_du),
 		.y_du(y_du),
@@ -91,6 +93,7 @@ module ball_platform(
 	
 	input goingdown,
 	
+	input [9:0]size,
 	input [9:0]ballx,
 	input [9:0]platx,
 	
@@ -119,6 +122,7 @@ module ball_collision(
 	input clk,
 	input enable,
 
+	input [9:0]size,
 	input x_du,
 	input y_du,
 	input [9:0]ballx, bally,

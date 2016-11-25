@@ -12,7 +12,7 @@ module brick_fsm(
 );
 	reg [2:0]current_state, next_state;
 	
-	wire [19:0]count, delay;
+	wire [19:0]count;
 	wire delay_reset;
 	
 	localparam	S_WAIT	=	3'd0;
@@ -40,7 +40,36 @@ module brick_fsm(
 		endcase
 	end
 	
+	always @(*)begin
+		go_draw = 0;
+		delay_reset = 0;
+		brickx = col_x1;
+		bricky = col_y1;
+		case(current_state)
+			S_LOAD1	: begin
+				go_draw = 1;
+				brickx = col_x1;
+				bricky = col_y1;
+			end
+			S_DRAW1	: begin
+				delay_reset = 1;
+			end
+			S_LOAD2	: begin
+			end
+			S_DRAW2	: begin
+			end
+		endcase
+	end
 	
+	// current_state registers
+	always@(posedge clk)
+	begin: state_FFs
+	  if(!resetn)
+			current_state <= S_LOAD_XY;
+	  else
+			current_state <= next_state;
+	end // state_FFS
+
 endmodule
 
 module brick_draw(
