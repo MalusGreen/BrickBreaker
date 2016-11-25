@@ -13,21 +13,21 @@
 //`include "address_xy.v"
 //`include "memory_bb.v"
 
-////HOME
-//`include "ball/ball_pos.v"
-//`include "ball/ball_draw.v"
-//`include "ball/ball_logic.v"
-//`include "delay_counter.v"
-////`include "vga_pll.v"
-////`include "vga_controller.v"
-////`include "vga_address_translator.v"
-////`include "vga_adapter.v"
-//`include "platform.v"
-//`include "load_data.v"
-//`include "bricks/brick_memory.v"
-//`include "bricks/brick_draw.v"
-//`include "bricks/address_xy.v"
-//`include "memory_bb.v"
+//HOME
+`include "ball/ball_pos.v"
+`include "ball/ball_draw.v"
+`include "ball/ball_logic.v"
+`include "delay_counter.v"
+//`include "vga_pll.v"
+//`include "vga_controller.v"
+//`include "vga_address_translator.v"
+//`include "vga_adapter.v"
+`include "platform.v"
+`include "load_data.v"
+`include "bricks/brick_memory.v"
+`include "bricks/brick_draw.v"
+`include "bricks/address_xy.v"
+`include "memory.v"
 
 `ifndef macros_vh
 // NOTE: for Verilog 1995 `ifndef is not supported use `ifdef macros_vh `else
@@ -157,6 +157,11 @@ module brickbreaker(
 //			.health(health),
 //			.x_in(brick_x),
 //			.y_in(brick_y),
+	
+	//temp assign gamehealth and gamewrite
+	
+	assign game_write = 0;
+	assign game_health = 0;
 	
 	assign mem_x_in  			= (load_select) ? game_mx : load_x;
 	assign mem_y_in  			= (load_select) ? game_my : load_y;

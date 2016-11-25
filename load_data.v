@@ -144,10 +144,14 @@ module load_datapath(
 	wire [19:0]draw_count;
 	wire [19:0]load_count;
 	
+	wire reset_draw;
+	//reset when resetn is 0 or when inc count is high.
+	assign reset_draw = (resetn & ~inc_count);
+	
 	counter drawcount(
 		.enable(count_enable),
 		.clk(clk),
-		.resetn(resetn),
+		.resetn(reset_draw),
 		
 		.c_x(draw_count)
 	);

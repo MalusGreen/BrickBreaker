@@ -9,7 +9,6 @@ module brick_memory(
 		output reg [9:0]x,
 		output reg [9:0]y
 	);
-	
 	wire [1:0]data;
 	
 	wire [9:0]address;

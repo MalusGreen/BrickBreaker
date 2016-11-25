@@ -9,7 +9,7 @@ vlib work
 vlog -timescale 1ns/1ns brickbreaker.v
 
 # Load simulation using mux as the top level simulation module.
-vsim brickbreaker
+vsim -L altera_mf_ver brickbreaker
 
 # Log all signals and add some signals to waveform window.
 log {/*}
@@ -28,4 +28,4 @@ force {KEY[3]} 0
 force {KEY[2]} 1
 force {SW[9:0]} 000000000
 
-run 2000ns
+run 200000ns
