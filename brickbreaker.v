@@ -277,7 +277,7 @@ module brickbreaker(
 	
 		brick_draw bd(
 			.resetn(resetn),
-			.clk(clk),
+			.clk(CLOCK_50),
 			.go(go_bricks),
 			.health(brick_health),
 			.x_in(brick_x),
