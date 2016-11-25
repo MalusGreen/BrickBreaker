@@ -5,26 +5,28 @@ module brick_fsm(
 	
 	input [9:0] col_x1, col_x2, col_y1, col_y2,
 	
-	input collided_1, collided_2
+	input collided_1, collided_2,
 	
-	output [9:0]brickx, bricky,
-	output go_draw
+	output reg [9:0]brickx, bricky,
+	output reg go_draw
 );
 	reg [2:0]current_state, next_state;
 	
 	wire [19:0]count;
-	wire delay_reset;
+	reg delay_reset;
+	wire delay_reset_wire;
+	assign delay_reset_wire = delay_reset;
 	
-	localparam	S_WAIT	=	3'd0;
-					S_LOAD1	=	3'd1;
-					S_DRAW1	=	3'd2;
-					S_LOAD2	=	3'd3;
+	localparam	S_WAIT	=	3'd0,
+					S_LOAD1	=	3'd1,
+					S_DRAW1	=	3'd2,
+					S_LOAD2	=	3'd3,
 					S_DRAW2	=	3'd4;
 	
 	counter brickdrawdelay(
 		.enable(1'b1),
 		.clk(clk),
-		.resetn(delay_reset),
+		.resetn(delay_reset_wire),
 		
 		.c_x(count)
 	);
@@ -33,9 +35,9 @@ module brick_fsm(
 		case(current_state)
 				S_WAIT	:	next_state = (go) ? S_LOAD1 : S_WAIT;
 				S_LOAD1	:	next_state = S_DRAW1;
-				S_DRAW1	:	next_state = (count == `BRICKDRAW) S_LOAD2 : S_DRAW1;
+				S_DRAW1	:	next_state = (count == `BRICKDRAW) ? S_LOAD2 : S_DRAW1;
 				S_LOAD2	:	next_state = S_DRAW2;
-				S_DRAW2	:	next_state = (count == `BRICKDRAW) S_WAIT : S_DRAW2;
+				S_DRAW2	:	next_state = (count == `BRICKDRAW) ? S_WAIT : S_DRAW2;
 				default: next_state = S_WAIT;
 		endcase
 	end
@@ -55,8 +57,12 @@ module brick_fsm(
 				delay_reset = 1;
 			end
 			S_LOAD2	: begin
+				go_draw = 1;
+				brickx = col_x2;
+				bricky = col_y2;
 			end
 			S_DRAW2	: begin
+				delay_reset = 1;
 			end
 		endcase
 	end
@@ -65,7 +71,7 @@ module brick_fsm(
 	always@(posedge clk)
 	begin: state_FFs
 	  if(!resetn)
-			current_state <= S_LOAD_XY;
+			current_state <= S_WAIT;
 	  else
 			current_state <= next_state;
 	end // state_FFS
@@ -91,10 +97,12 @@ module brick_draw(
 		.x_in(x_in),
 		.y_in(y_in),
 		
-		.writeEn(wren)
+		.writeEn(writeEn),
+		.x_out(x_out),
+		.y_out(y_out)
 	);
 	
-	brick_color(
+	brick_color brickcolor(
 		.health(health),
 		.color(color)
 	);

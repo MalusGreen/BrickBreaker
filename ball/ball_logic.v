@@ -1,3 +1,21 @@
+`ifndef macros_vh
+// NOTE: for Verilog 1995 `ifndef is not supported use `ifdef macros_vh `else
+`define macros_vh
+/**************
+* your macros *
+* `define ... *
+***************/
+`define GRIDX 10'd16
+`define GRIDY 10'd4
+`define BRICKNUM 20'd64
+`define BRICKX 10'd4
+`define BRICKY 10'd2
+`define BRICKDRAW 20'd16
+`define BRICKDRAWTWO 20'd32
+`define PLATY 10'd64
+`define PLATSIZE 10'd20
+`endif
+
 module ball_logic(
 	input resetn,
 	input clk,
@@ -10,7 +28,7 @@ module ball_logic(
 	input [1:0]health,
 	
 	output [9:0]memx, memy,
-	output x_du, y_du
+	output x_du, y_du,
 	
 	output [9:0] col_x1, col_x2, col_y1, col_y2,
 	
@@ -20,7 +38,7 @@ module ball_logic(
 	reg x_dir, y_dir;
 	wire plat_collided;
 	
-	ball_platform(
+	ball_platform bp(
 		.resetn(resetn),
 		.clk(clk),
 		.enable(logic_go),
@@ -33,7 +51,7 @@ module ball_logic(
 		.collided(plat_collided)
 	);
 	
-	ball_collision(
+	ball_collision bc(
 		.resetn(resetn),
 		.clk(clk),
 		.enable(logic_go),
@@ -60,6 +78,14 @@ module ball_logic(
 		.collided_2(collided_2)
 	);
 	
+	always @(posedge collided_1, plat_collided)begin
+		y_dir = ~y_dir;
+	end
+	
+	always @(posedge collided_2)begin
+		x_dir = ~x_dir;
+	end
+	
 	always @(posedge clk)begin
 		if(!resetn) begin
 			x_dir <= 0;
@@ -69,17 +95,15 @@ module ball_logic(
 			case (x)
 				x_max - size:	x_dir = 0;
 				0				:  x_dir = 1;
-				default		:  x_dir = (collided_2) ? ~x_dir: x_dir;
+				default		:  x_dir = x_dir;
 			endcase
 			case (y)
 				y_max - size: y_dir = 0;
 				0				: y_dir = 1;
-				default		: y_dir = (plat_collided | collided_1) ? ~y_dir : y_dir;
+				default		: y_dir = y_dir;
 			endcase
 		end
 	end
-	
-	
 	
 	assign	x_du = x_dir;
 	assign	y_du = y_dir;
@@ -97,7 +121,7 @@ module ball_platform(
 	input [9:0]ballx,
 	input [9:0]platx,
 	
-	output collided
+	output reg collided
 	);
 	wire [9:0]ball_xedge;
 	assign ball_xedge = (ballx + size);
@@ -105,7 +129,7 @@ module ball_platform(
 	always @(*)begin
 		collided = 0;
 		if(goingdown)begin
-			if(ballx < (platx + `PLATX))begin
+			if(ballx < (platx + `PLATSIZE))begin
 				collided = 1;
 			end
 			
@@ -134,17 +158,17 @@ module ball_collision(
 	output reg collided_1, collided_2
 	);
 
-	reg [4:0]current_state, next_state;
+	reg [3:0]current_state, next_state;
 	
-	localparam 	S_WAIT		= 3'd0,
+	localparam 	S_WAIT		= 4'd0,
 					S_LOAD_1		= 4'd1,
-					S_YLEFT		= 3'd2,
+					S_YLEFT		= 4'd2,
 					S_LOAD_2		= 4'd3,
-					S_YRIGHT		= 3'd4,
+					S_YRIGHT		= 4'd4,
 					S_LOAD_3		= 4'd5,
-					S_XUP			= 3'd6,
+					S_XUP			= 4'd6,
 					S_LOAD_4		= 4'd7,
-					S_XDOWN 		= 3'd8;
+					S_XDOWN 		= 4'd8;
 					
 	always @(*)
    begin: state_table 
@@ -163,8 +187,10 @@ module ball_collision(
    end // state_table
 	 // current_state registers
    
-	assign [9:0]ball_yedge = (y_du) ? (bally + size) : bally;
-	assign [9:0]ball_xedge = (x_du) ? (ballx + size) : ballx;
+	wire [9:0]ball_xedge, ball_yedge;
+	
+	assign ball_yedge = (y_du) ? (bally + size) : bally;
+	assign ball_xedge = (x_du) ? (ballx + size) : ballx;
 	
 	always @(*)begin
 		col_x1 = 0;

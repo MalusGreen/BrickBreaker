@@ -1,9 +1,27 @@
+`ifndef macros_vh
+// NOTE: for Verilog 1995 `ifndef is not supported use `ifdef macros_vh `else
+`define macros_vh
+/**************
+* your macros *
+* `define ... *
+***************/
+`define GRIDX 10'd16
+`define GRIDY 10'd4
+`define BRICKNUM 20'd64
+`define BRICKX 10'd4
+`define BRICKY 10'd2
+`define BRICKDRAW 20'd16
+`define BRICKDRAWTWO 20'd32
+`define PLATY 10'd64
+`define PLATSIZE 10'd20
+`endif
+
 module load_data(
 	input resetn,
 	input clk,
 	input [9:0]selection,
 	
-	output load,
+	output load_draw,
 	output select,
 	output [9:0]x_out, y_out,
 	output [9:0]address,
@@ -13,7 +31,7 @@ module load_data(
 	wire done_all, done_draw;
 	wire inc_count, count_enable, writeEn;
 	
-	load_control(
+	load_control loadcontrol(
 		.resetn(resetn),
 		.clk(clk),
 		.done_all(done_all),
@@ -22,11 +40,11 @@ module load_data(
 		.inc_count(inc_count),
 		.count_enable(count_enable),
 		.writeEn(writeEn),
-		.draw(load),
+		.draw(load_draw),
 		.done(select)
 	);
 	
-	load_datapath(
+	load_datapath loaddatapath(
 		.resetn(resetn),
 		.clk(clk),
 		
