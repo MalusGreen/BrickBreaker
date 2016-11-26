@@ -1,6 +1,3 @@
-
-`include "macros.v"
-
 module platform(
 	input clk,
 	input resetn,
@@ -18,7 +15,7 @@ module platform(
 	wire ld_x, inc_x;
 	wire finished_row;
 	
-	wire [9:0] size = `PLATSIZE;
+	wire [9:0] size = 10'd20;
 	assign colour = 3'b100;
 	
 	control c(
@@ -129,7 +126,7 @@ module datapath(
 		if(!resetn) begin
 			x  <= 10'd32;
 			qx <= 10'd0;
-			y  <= `PLATY;
+			y  <= 10'd64;
 			finished_row <= 0;
 		end
 		else begin

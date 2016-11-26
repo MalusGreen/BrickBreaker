@@ -15,5 +15,5 @@
 `define BRICKDRAWTWO 20'd32
 `define PLATY 10'd64
 `define PLATSIZE 10'd20
-`define BALLSIZE 10'd1
+`define BALLSIZE 10'd2
 `endif

@@ -1,35 +1,8 @@
-//`include "ball_pos.v"
-//`include "ball_draw.v"
-//`include "ball_logic.v"
-//`include "delay_counter.v"
-//`include "vga_pll.v"
-//`include "vga_controller.v"
-//`include "vga_address_translator.v"
-//`include "vga_adapter.v"
-//`include "platform.v"
-//`include "load_data.v"
-//`include "brick_memory.v"
-//`include "brick_draw.v"
-//`include "address_xy.v"
-//`include "memory_bb.v"
-
-//HOME
 `include "ball/ball_pos.v"
 `include "ball/ball_draw.v"
 `include "ball/ball_logic.v"
 `include "delay_counter.v"
-//`include "vga_pll.v"
-//`include "vga_controller.v"
-//`include "vga_address_translator.v"
-//`include "vga_adapter.v"
 `include "platform.v"
-`include "load_data.v"
-`include "bricks/brick_memory.v"
-`include "bricks/brick_draw.v"
-`include "bricks/address_xy.v"
-`include "memory.v"
-`include "macros.v"
-
 
 module brickbreaker(
 		CLOCK_50,						//	On Board 50 MHz
@@ -73,21 +46,21 @@ module brickbreaker(
 	
 	//Constants and connective wires.
 	wire enable, inc_enable;
-	wire [9:0]ball_x, screen_x, grid_x, brick_x;
-	wire [9:0]ball_y, screen_y, grid_y, brick_y;
+	wire [9:0]ball_x, screen_x;
+	wire [9:0]ball_y, screen_y;
 	wire [9:0]size;
 	wire [39:0]delay;
 	
-	wire go_ball, go_bricks_fsm, go_plat;
+	wire go_ball, go_bricks, go_plat;
 	wire [1:0]draw_mux;
 	wire iscolour;
 	
-	assign screen_x = 10'd320 - 1;
-	assign screen_y = 10'd240 - 1;
+	assign screen_x = 10'd160 - 1;
+	assign screen_y = 10'd120 - 1;
 //	assign delay = 40'd833333;
 //	assign delay = 40'd1666666;
-	assign delay = 40'd200;
-	assign size = `BALLSIZE;
+	assign delay = 40'd32;
+	assign size = 10'd2;
 	
 	//draw fsm
 	
@@ -97,7 +70,7 @@ module brickbreaker(
 		.clk(CLOCK_50),
 		
 		.go_ball(go_ball),
-		.go_bricks(go_bricks_fsm),
+		.go_bricks(go_bricks),
 		.go_plat(go_plat),
 		
 		.draw_mux(draw_mux),
@@ -105,101 +78,19 @@ module brickbreaker(
 		.inc_enable(inc_enable)
 	);
 	
-	wire go_bricks, load_draw, game_write, load_select, fsm_brick_draw;
-	wire [9:0]load_x, game_mx, game_my, load_y;
-	wire [9:0]load_address;
-	wire [1:0]load_health, game_health;
-	
-	wire [9:0]platx_for_real;
-	
-	load_data ld(
-		.resetn(resetn),
-		.clk(CLOCK_50),
-		.selection(SW[9:0]),
-		
-		.load_draw(load_draw),
-		.select(load_select),
-		.x_out(load_x),
-		.y_out(load_y),
-		.address(load_address),
-		.health(load_health)
-	);
-	
-	//* LOAD DATA LOGIC AREA *//
-	
-	wire [9:0]mem_x_in, mem_y_in, mem_x_out, mem_y_out;
-	wire [1:0]mem_in_health, mem_out_health, brick_health;
-	wire mem_write;
-	
-	wire [9:0]fsm_brick_x, fsm_brick_y;
-//			.go(go_brick),
-//			.health(health),
-//			.x_in(brick_x),
-//			.y_in(brick_y),
-	
-	//temp assign gamehealth and gamewrite
-	
-	assign mem_x_in  			= (load_select) ? game_mx : load_x;
-	assign mem_y_in  			= (load_select) ? game_my : load_y;
-	assign mem_in_health 	= (load_select) ? game_health : load_health;
-	assign mem_write 			= (load_select) ? game_write: load_draw;
-	
-	//FIX LOAD
-	assign go_bricks 		= (load_select) ? fsm_brick_draw : load_draw;
-	assign brick_health 	= (load_select) ? mem_out_health : load_health;
-	assign brick_x			= (load_select) ? fsm_brick_x : load_x;
-	assign brick_y			= (load_select) ? fsm_brick_y : load_y;
-	
-	//* LOAD DATA LOGIC AREA *//
-	
-	
 	//game_logic
-	brick_memory bm(
-		.clk(CLOCK_50),
-		.resetn(resetn),
-		.x_in(mem_x_in),
-		.y_in(mem_y_in),
-		.wren(mem_write),
-		.health_in(mem_in_health),
-		
-		.health(mem_out_health),
-		.x(mem_x_out),
-		.y(mem_y_out)
-	);
-	
-	wire [9:0] col_x1, col_x2, col_y1, col_y2;
-	wire col_1, col_2;
-	
 	ball_logic balllogic(
 		.resetn(resetn),
 		.clk(CLOCK_50),
 		
 		.x_du(x_du),
 		.y_du(y_du),
-		.logic_go(inc_enable),
 		
 		.x(ball_x),
 		.x_max(screen_x),
 		.y(ball_y),
 		.y_max(screen_y),
-		.size(size),
-		.brickx_in(mem_x_out),
-		.bricky_in(mem_y_out),
-		.platx(platx_for_real),
-		.health(brick_health),
-		
-		.game_health(game_health),
-		.game_write(game_write),
-		.memx(game_mx),
-		.memy(game_my),
-	
-		.col_x1(col_x1),
-		.col_x2(col_x2),
-		.col_y1(col_y1),
-		.col_y2(col_y2),
-	
-		.collided_1(col_1),
-		.collided_2(col_2)
+		.size(size)
 	);
 	
 	ball_pos ballpos(
@@ -222,6 +113,11 @@ module brickbreaker(
 	wire [2:0]colour_vga;
 	wire writeEn_vga;
 	
+	assign brick_dx = 10'd0;
+	assign brick_dy = 10'd0;
+	assign brick_en = 1'b0;
+	assign brick_colour = 3'd0;
+	
 	//drawfunctions
 	ball_draw balldraw(
 		.resetn(resetn),
@@ -238,41 +134,6 @@ module brickbreaker(
 		.colour(ball_colour)
 	);
 	
-	/*  BRICK MODULE LOCATION  */
-	
-	brick_fsm bfsm(
-		.resetn(resetn),
-		.clk(CLOCK_50),
-		.go(go_bricks_fsm),
-		
-		.col_x1(col_x1), 
-		.col_x2(col_x2), 
-		.col_y1(col_y1), 
-		.col_y2(col_y2),
-		
-		.collided_1(col_1), 
-		.collided_2(col_2),
-		
-		.brickx(fsm_brick_x), 
-		.bricky(fsm_brick_y),
-		.go_draw(fsm_brick_draw)
-	);
-	
-		brick_draw bd(
-			.resetn(resetn),
-			.clk(CLOCK_50),
-			.go(go_bricks),
-			.health(brick_health),
-			.x_in(brick_x),
-			.y_in(brick_y),
-			
-			
-			.writeEn(brick_en),
-			.x_out(brick_dx),
-			.y_out(brick_dy),
-			.color(brick_colour)
-		);
-	
 	platform platlog(
 		.clk(CLOCK_50),
 		.resetn(resetn),
@@ -284,9 +145,7 @@ module brickbreaker(
 		.x(plat_dx),
 		.y(plat_dy),
 		.colour(plat_colour),
-		.writeEn(plat_en),
-		
-		.d_x(platx_for_real)
+		.writeEn(plat_en)
 	);
 	
 	//MUX
@@ -340,7 +199,7 @@ module brickbreaker(
 	//delay
 	delay_counter delaycounter(
 		.clk(CLOCK_50),
-		.resetn(resetn & load_select),
+		.resetn(resetn),
 		.delay(delay),
 		
 		.d_enable(enable)
@@ -370,18 +229,16 @@ module draw_fsm(
 					S_PLAT_LOAD		= 4'd5,
 					S_PLAT_DRAW		= 4'd6,
 					S_INC				= 4'd7,
-					S_INC_DELAY		= 4'd8,
-					S_CHANGE			= 4'd9;
+					S_CHANGE			= 4'd8;
 					
 	//CONSTANTS AND COUNTER VARIABLES
 	reg delay_reset, changecolour;
-	wire [19:0] ball_delay, brick_delay, plat_delay, logic_delay;
+	wire [19:0] ball_delay, brick_delay, plat_delay;
 	reg [19:0] delay;
 	
 	assign ball_delay 	= 20'd30;
-	assign brick_delay	= `BRICKDRAWTWO;
+	assign brick_delay	= 20'd2;
 	assign plat_delay 	= 20'd10;
-	assign logic_delay  	= 20'd12;
 	
 	wire [19:0]count;
 	
@@ -398,12 +255,11 @@ module draw_fsm(
 				S_FSM_WAIT: next_state = (enable | iscolour) ? S_BALL_LOAD : S_FSM_WAIT;
 				S_BALL_LOAD: next_state = S_BALL_DRAW;
 				S_BALL_DRAW: next_state = (count == delay) ? S_BRICKS_LOAD : S_BALL_DRAW;
-				S_BRICKS_LOAD: next_state = (iscolour) ? S_BRICKS_DRAW : S_PLAT_LOAD;
+				S_BRICKS_LOAD: next_state = S_BRICKS_DRAW;
 				S_BRICKS_DRAW: next_state = (count == delay) ? S_PLAT_LOAD : S_BRICKS_DRAW;
 				S_PLAT_LOAD: next_state = S_PLAT_DRAW;
 				S_PLAT_DRAW: next_state = (count == delay) ? S_INC : S_PLAT_DRAW;
-				S_INC: next_state = S_INC_DELAY;
-				S_INC_DELAY: next_state = ((count == delay)| iscolour) ? S_CHANGE : S_INC_DELAY;
+				S_INC: next_state = S_CHANGE;
 				S_CHANGE: next_state = S_FSM_WAIT;
 				default: next_state = S_FSM_WAIT;
 		endcase
@@ -424,23 +280,23 @@ module draw_fsm(
 		case (current_state)
 			S_BALL_LOAD: begin 
 				go_ball = 1;
-				draw_mux = 2'd1;
+				draw_mux = 2'd0;
 				delay_reset = 0;
 				delay = ball_delay;
 			end
 			S_BALL_DRAW: begin 
 				delay = ball_delay;
-				draw_mux = 2'd1;
+				draw_mux = 2'd0;
 			end
 			S_BRICKS_LOAD: begin 
 				go_bricks = 1;
-				draw_mux = 2'd0;
+				draw_mux = 2'd1;
 				delay_reset = 0;
 				delay = brick_delay;
 			end
 			S_BRICKS_DRAW: begin 
 				delay = brick_delay;
-				draw_mux = 2'd0;
+				draw_mux = 2'd1;
 			end
 			S_PLAT_LOAD: begin 
 				go_plat = 1;
@@ -454,11 +310,6 @@ module draw_fsm(
 			S_INC: begin
 				if(~iscolour)
 					inc_enable = 1;
-				delay_reset = 0;
-			end
-			S_INC_DELAY:begin
-				if(~iscolour)
-					delay = logic_delay;
 			end
 			S_CHANGE: begin
 				changecolour = 1;
@@ -544,13 +395,13 @@ module draw_mux(
 	
 	always @(*)begin
 		case(draw_mux)
-			2'd1:begin 
+			2'd0:begin 
 				x = ball_x;
 				y = ball_y;
 				colour = (iscolour) ? ball_colour : BLACK;
 				writeEn = ball_en;
 			end
-			2'd0:begin 
+			2'd1:begin 
 				x = brick_x;
 				y = brick_y;
 				colour = (iscolour) ? brick_colour : BLACK;
@@ -563,14 +414,32 @@ module draw_mux(
 				writeEn = plat_en;
 			end
 			default: begin
-				x = brick_x;
-				y = brick_y;
-				colour = (iscolour) ? brick_colour : BLACK;
-				writeEn = brick_en;
+				x = ball_x;
+				y = ball_y;
+				colour = (iscolour) ? ball_colour : BLACK;
+				writeEn = ball_en;
 			end
 		endcase
 	end
 	
 endmodule
 
+module counter(
+	input enable,
+	input clk,
+	input resetn,
+	
+	output reg [19:0]c_x
+	);
+	
+	always @ (posedge clk) begin
+		if(!resetn)
+			c_x <= 20'b0;
+			
+		else
+			if(enable)begin 
+				c_x = c_x + 1;
+			end
+	end
 
+endmodule
