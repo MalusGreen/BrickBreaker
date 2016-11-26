@@ -84,7 +84,7 @@ module control(
         case (current_state)
             S_LOAD_X: begin
 					ld_x  = 1;
-					wren  = 1;
+					wren = 1;
 					end
 				S_INC_X: begin
 					inc_x = 1;
@@ -130,11 +130,11 @@ module datapath(
 			finished_row <= 0;
 		end
 		else begin
+			if(enable & left & x > 10'd0) 
+				x <= x - 1;
+			else if(enable & right & x < 10'd159) 
+				x <= x + 1;
 			if(ld_x)begin
-				if(enable & left & x != 10'd0) 
-					x <= x - 1;
-				else if(enable & right & x != 10'd159) 
-					x <= x + 1;
 				qx <= size - 1;
 				finished_row <= 0;
 			end

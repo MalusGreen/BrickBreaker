@@ -1,14 +1,15 @@
-`include "ball/ball_pos.v"
-`include "ball/ball_draw.v"
-`include "ball/ball_logic.v"
-`include "delay_counter.v"
-`include "platform.v"
+//`include "ball/ball_pos.v"
+//`include "ball/ball_draw.v"
+//`include "ball/ball_logic.v"
+//`include "delay_counter.v"
+//`include "platform.v"
 
 module brickbreaker(
 		CLOCK_50,						//	On Board 50 MHz
 	// Your inputs and outputs here
 	  KEY,
 	  SW,
+	  LEDR,
 	// The ports below are for the VGA output.  Do not change.
 	VGA_CLK,   						//	VGA Clock
 	VGA_HS,							//	VGA H_SYNC
@@ -23,7 +24,7 @@ module brickbreaker(
 	input			CLOCK_50;				//	50 MHz
 	input   [9:0]   SW;
 	input   [3:0]   KEY;
-
+	output  [9:0]	 LEDR;
 	// Declare your inputs and outputs here
 	// Do not change the following outputs
 	output			VGA_CLK;   				//	VGA Clock
@@ -54,16 +55,18 @@ module brickbreaker(
 	wire go_ball, go_bricks, go_plat;
 	wire [1:0]draw_mux;
 	wire iscolour;
+
+	//collision wires
+	wire [9:0]platx;
 	
 	assign screen_x = 10'd160 - 1;
 	assign screen_y = 10'd120 - 1;
-//	assign delay = 40'd833333;
+	assign delay = 40'd833333;
 //	assign delay = 40'd1666666;
-	assign delay = 40'd32;
+//	assign delay = 40'd32;
 	assign size = 10'd2;
 	
 	//draw fsm
-	
 	draw_fsm FSM(
 		.enable(enable),
 		.resetn(resetn),
@@ -80,6 +83,7 @@ module brickbreaker(
 	
 	//game_logic
 	ball_logic balllogic(
+		.logic_go(logic_go),
 		.resetn(resetn),
 		.clk(CLOCK_50),
 		
@@ -90,8 +94,22 @@ module brickbreaker(
 		.x_max(screen_x),
 		.y(ball_y),
 		.y_max(screen_y),
-		.size(size)
+		.size(size),
+		
+		.platx(platx),
+		
+		.test_collided(LEDR[0])
 	);
+	
+	reg test;
+	always @(posedge LEDR[0])begin
+		if(!resetn)
+			test <= 1;
+		else
+			test <= ~test;
+	end
+	assign LEDR[1] = test;
+	assign LEDR[9] = inc_enable;
 	
 	ball_pos ballpos(
 		.enable(inc_enable),
@@ -112,6 +130,8 @@ module brickbreaker(
 	wire [9:0]x_vga,y_vga;
 	wire [2:0]colour_vga;
 	wire writeEn_vga;
+	
+
 	
 	assign brick_dx = 10'd0;
 	assign brick_dy = 10'd0;
@@ -145,7 +165,9 @@ module brickbreaker(
 		.x(plat_dx),
 		.y(plat_dy),
 		.colour(plat_colour),
-		.writeEn(plat_en)
+		.writeEn(plat_en),
+		
+		.d_x(platx)
 	);
 	
 	//MUX
@@ -238,7 +260,7 @@ module draw_fsm(
 	
 	assign ball_delay 	= 20'd30;
 	assign brick_delay	= 20'd2;
-	assign plat_delay 	= 20'd10;
+	assign plat_delay 	= 20'd30;
 	
 	wire [19:0]count;
 	
@@ -355,27 +377,27 @@ module draw(
 	);
 	
 	
-//	vga_adapter VGA(
-//		.resetn(resetn),
-//		.clock(clk),
-//		.colour(colour),
-//		.x(x),
-//		.y(y),
-//		.plot(writeEn),
-//		
-//		/* Signals for the DAC to drive the monitor. */
-//		.VGA_R(VGA_R),
-//		.VGA_G(VGA_G),
-//		.VGA_B(VGA_B),
-//		.VGA_HS(VGA_HS),
-//		.VGA_VS(VGA_VS),
-//		.VGA_BLANK(VGA_BLANK_N),
-//		.VGA_SYNC(VGA_SYNC_N),
-//		.VGA_CLK(VGA_CLK));
-//	defparam VGA.RESOLUTION = "160x120";
-//	defparam VGA.MONOCHROME = "FALSE";
-//	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
-//	defparam VGA.BACKGROUND_IMAGE = "black.mif";
+	vga_adapter VGA(
+		.resetn(resetn),
+		.clock(clk),
+		.colour(colour),
+		.x(x),
+		.y(y),
+		.plot(writeEn),
+		
+		/* Signals for the DAC to drive the monitor. */
+		.VGA_R(VGA_R),
+		.VGA_G(VGA_G),
+		.VGA_B(VGA_B),
+		.VGA_HS(VGA_HS),
+		.VGA_VS(VGA_VS),
+		.VGA_BLANK(VGA_BLANK_N),
+		.VGA_SYNC(VGA_SYNC_N),
+		.VGA_CLK(VGA_CLK));
+	defparam VGA.RESOLUTION = "160x120";
+	defparam VGA.MONOCHROME = "FALSE";
+	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
+	defparam VGA.BACKGROUND_IMAGE = "black.mif";
 	
 endmodule
 
