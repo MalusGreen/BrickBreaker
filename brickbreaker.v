@@ -3,6 +3,9 @@
 //`include "ball/ball_logic.v"
 //`include "delay_counter.v"
 //`include "platform.v"
+//`include "load_data.v"
+
+`include "macros.v"
 
 module brickbreaker(
 		CLOCK_50,						//	On Board 50 MHz
@@ -37,13 +40,23 @@ module brickbreaker(
 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0]
 	
 	//Inputs
-	wire resetn;
+	wire resetn, loading, loadingresetn;
 	wire x_du, y_du;
 	wire left, right;
 	
 	assign resetn = KEY[0];
 	assign left = ~KEY[3];
 	assign right = ~KEY[2];
+	
+	//load variables
+	wire load_draw;
+	wire [9:0] load_x, load_y;
+	wire [9:0] load_address;
+	wire [1:0] load_data;
+	
+	wire [9:0] load_dx, load_dy;
+	wire load_wren;
+	wire [2:0] load_colour;
 	
 	//Constants and connective wires.
 	wire enable, inc_enable;
@@ -66,6 +79,32 @@ module brickbreaker(
 //	assign delay = 40'd32;
 	assign size = 10'd2;
 	
+	load_data ld(
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		.selection(SW),
+		
+		.load_draw(load_draw),
+		.loading(loading),
+		.x_out(load_x),
+		.y_out(load_y),
+		.address(load_address),
+		.health(load_data)
+	);
+	
+	brick_memory bm(
+		.clk(CLOCK_50),
+		.resetn(resetn),
+		.x_in(mem_x_in),
+		.y_in(mem_y_in),
+		.wren(mem_write),
+		.health_in(mem_in_health),
+		
+		.health(mem_out_health),
+		.x(mem_x_out),
+		.y(mem_y_out)
+	);
+	
 	//draw fsm
 	draw_fsm FSM(
 		.enable(enable),
@@ -83,7 +122,7 @@ module brickbreaker(
 	
 	//game_logic
 	ball_logic balllogic(
-		.logic_go(logic_go),
+		.logic_go(inc_enable),
 		.resetn(resetn),
 		.clk(CLOCK_50),
 		
@@ -109,7 +148,9 @@ module brickbreaker(
 			test <= ~test;
 	end
 	assign LEDR[1] = test;
-	assign LEDR[9] = inc_enable;
+	assign LEDR[9] = loadingresetn;
+	assign LEDR[8] = resetn;
+	assign LEDR[7] = loading;
 	
 	ball_pos ballpos(
 		.enable(inc_enable),
@@ -154,6 +195,36 @@ module brickbreaker(
 		.colour(ball_colour)
 	);
 	
+	//drawing bricks
+	brick_draw loaddraw(
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		.go(load_draw),
+		.health(load_data),
+		.x_in(load_x),
+		.y_in(load_y),
+		
+		.writeEn(load_wren),
+		.x_out(load_dx),
+		.y_out(load_dy),
+		.color(load_colour)
+	);
+	
+//		brick_draw bd(
+//			.resetn(resetn),
+//			.clk(CLOCK_50),
+//			.go(go_bricks),
+//			.health(brick_health),
+//			.x_in(brick_x),
+//			.y_in(brick_y),
+//			
+//			
+//			.writeEn(brick_en),
+//			.x_out(brick_dx),
+//			.y_out(brick_dy),
+//			.color(brick_colour)
+//		);
+	
 	platform platlog(
 		.clk(CLOCK_50),
 		.resetn(resetn),
@@ -178,18 +249,23 @@ module brickbreaker(
 		.ball_y(ball_dy),
 		.brick_y(brick_dy),
 		.plat_y(plat_dy),
+		.load_x(load_dx),
+		.load_y(load_dy),
 		
 		.ball_colour(ball_colour),
 		.brick_colour(brick_colour),
 		.plat_colour(plat_colour),
+		.load_colour(load_colour),
 		
 		.ball_en(ball_en), 
 		.brick_en(brick_en), 
 		.plat_en(plat_en),
+		.load_en(load_wren),
 		
 		.draw_mux(draw_mux),
 		
 		.iscolour(iscolour),
+		.isloading(loading),
 		
 		.x(x_vga),
 		.y(y_vga),
@@ -259,7 +335,7 @@ module draw_fsm(
 	reg [19:0] delay;
 	
 	assign ball_delay 	= 20'd30;
-	assign brick_delay	= 20'd2;
+	assign brick_delay	= `BRICKDRAW;
 	assign plat_delay 	= 20'd30;
 	
 	wire [19:0]count;
@@ -402,11 +478,12 @@ module draw(
 endmodule
 
 module draw_mux(
-	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,
-	input [2:0]ball_colour,brick_colour,plat_colour,
-	input ball_en, brick_en, plat_en,
+	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,load_x,load_y,
+	input [2:0]ball_colour,brick_colour,plat_colour,load_colour,
+	input ball_en, brick_en, plat_en, load_en,
 	input [1:0]draw_mux,
 	input iscolour,
+	input isloading,
 	
 	output reg [9:0]x,y,
 	output reg [2:0]colour,
@@ -416,32 +493,40 @@ module draw_mux(
 	localparam BLACK = 3'b000;
 	
 	always @(*)begin
-		case(draw_mux)
-			2'd0:begin 
-				x = ball_x;
-				y = ball_y;
-				colour = (iscolour) ? ball_colour : BLACK;
-				writeEn = ball_en;
-			end
-			2'd1:begin 
-				x = brick_x;
-				y = brick_y;
-				colour = (iscolour) ? brick_colour : BLACK;
-				writeEn = brick_en;
-			end
-			2'd2:begin 
-				x = plat_x;
-				y = plat_y;
-				colour = (iscolour) ? plat_colour : BLACK;
-				writeEn = plat_en;
-			end
-			default: begin
-				x = ball_x;
-				y = ball_y;
-				colour = (iscolour) ? ball_colour : BLACK;
-				writeEn = ball_en;
-			end
-		endcase
+		if(isloading)begin
+			case(draw_mux)
+				2'd0:begin 
+					x = ball_x;
+					y = ball_y;
+					colour = (iscolour) ? ball_colour : BLACK;
+					writeEn = ball_en;
+				end
+				2'd1:begin 
+					x = brick_x;
+					y = brick_y;
+					colour = (iscolour) ? brick_colour : BLACK;
+					writeEn = brick_en;
+				end
+				2'd2:begin 
+					x = plat_x;
+					y = plat_y;
+					colour = (iscolour) ? plat_colour : BLACK;
+					writeEn = plat_en;
+				end
+				default: begin
+					x = ball_x;
+					y = ball_y;
+					colour = (iscolour) ? ball_colour : BLACK;
+					writeEn = ball_en;
+				end
+			endcase
+		end
+		else begin
+			x = load_x;
+			y = load_y;
+			colour = load_colour;
+			writeEn = load_en;
+		end
 	end
 	
 endmodule

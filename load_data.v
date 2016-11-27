@@ -1,12 +1,13 @@
 
 `include "macros.v"
+
 module load_data(
 	input resetn,
 	input clk,
 	input [9:0]selection,
 	
 	output load_draw,
-	output select,
+	output loading,
 	output [9:0]x_out, y_out,
 	output [9:0]address,
 	output [1:0]health
@@ -25,7 +26,7 @@ module load_data(
 		.count_enable(count_enable),
 		.writeEn(writeEn),
 		.draw(load_draw),
-		.done(select)
+		.done(loading)
 	);
 	
 	load_datapath loaddatapath(
@@ -210,15 +211,13 @@ module level_one(
 			20'd1:
 				health = 2'd3;
 			20'd2:
-				health = 2'd2;
-			20'd3:
 				health = 2'd1;
+			20'd3:
+				health = 2'd3;
 			20'd4:
 				health = 2'd3;
 			20'd5:
-				health = 2'd1;
-			20'd17:
-				health = 2'd1;
+				health = 2'd2;
 			20'd33:
 				health = 2'd1;
 			default:
