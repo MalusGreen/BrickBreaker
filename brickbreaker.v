@@ -545,7 +545,7 @@ module counter(
 			
 		else
 			if(enable)begin 
-				c_x = c_x + 1;
+				c_x <= c_x + 1;
 			end
 	end
 
