@@ -53,6 +53,7 @@ module brickbreaker(
 	wire [9:0] load_x, load_y;
 	wire [9:0] load_address;
 	wire [1:0] load_data;
+	wire load_write;
 	
 	wire [9:0] load_dx, load_dy;
 	wire load_wren;
@@ -86,11 +87,21 @@ module brickbreaker(
 		
 		.load_draw(load_draw),
 		.loading(loading),
+		.writeEn(load_write),
 		.x_out(load_x),
 		.y_out(load_y),
 		.address(load_address),
 		.health(load_data)
 	);
+	
+	wire [9:0] mem_x_in, mem_y_in, game_x_in, game_y_in;
+	wire mem_write, game_write;
+	wire [1:0]mem_in_health, game_health;
+	
+	assign mem_in_health = (loading) ? game_health : load_data;
+	assign mem_x_in = (loading) ? game_x_in : load_x;
+	assign mem_y_in = (loading) ? game_y_in : load_y;
+	assign mem_write = (loading) ? game_write : load_write;
 	
 	brick_memory bm(
 		.clk(CLOCK_50),
@@ -126,16 +137,24 @@ module brickbreaker(
 		.resetn(resetn),
 		.clk(CLOCK_50),
 		
-		.x_du(x_du),
-		.y_du(y_du),
-		
 		.x(ball_x),
 		.x_max(screen_x),
 		.y(ball_y),
 		.y_max(screen_y),
 		.size(size),
-		
+		.brickx_in(mem_x_out),
+		.bricky_in(mem_y_out),
 		.platx(platx),
+		.health(mem_out_health),
+		
+		.x_du(x_du),
+		.y_du(y_du),
+		
+//		.game_health(game_health),
+//		.game_write(game_write)
+		
+		.memx(mem_x_),
+		.memy(),
 		
 		.test_collided(LEDR[0])
 	);

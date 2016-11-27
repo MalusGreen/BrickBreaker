@@ -1,3 +1,5 @@
+`include "macros.v"
+
 module platform(
 	input clk,
 	input resetn,

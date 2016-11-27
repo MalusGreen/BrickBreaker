@@ -10,11 +10,12 @@ module load_data(
 	output loading,
 	output [9:0]x_out, y_out,
 	output [9:0]address,
-	output [1:0]health
+	output [1:0]health,
+	output writeEn
 	);
 	
 	wire done_all, done_draw;
-	wire inc_count, count_enable, writeEn;
+	wire inc_count, count_enable;
 	
 	load_control loadcontrol(
 		.resetn(resetn),

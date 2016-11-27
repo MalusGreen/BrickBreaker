@@ -153,7 +153,7 @@ module ball_collision(
 	output collided_1, collided_2
 	);
 		
-		wire check_twicex, check_twicey,
+		wire check_twicex, check_twicey;
 
 		wire ldmem_1;
 		wire ldmem_2;
@@ -177,6 +177,8 @@ module ball_collision(
 		.check_twicex(check_twicex),
 		.check_twicey(check_twicey),
 		
+		.checkud(checkud),
+		.checklr(checklr),
 		.ldmem_1(ldmem_1),
 		.ldmem_2(ldmem_2),
 		.ldmem_3(ldmem_3),
@@ -194,7 +196,7 @@ module ball_collision(
 		.resetn(resetn),
 		.clk(clk),
 		
-		
+		.size(size),
 		.ldmem_1(ldmem_1),
 		.ldmem_2(ldmem_2),
 		.ldmem_3(ldmem_3),
@@ -215,6 +217,8 @@ module ball_collision(
 		
 		.checkud(checkud), 
 		.checklr(checklr),
+		.check_twicex(check_twicex),
+		.check_twicey(check_twicey),
 		.game_write(game_write),
 		.game_health(game_health),
 		.memx(memx), 
@@ -236,18 +240,19 @@ module ball_collision_control(
 		
 		input collided_1, collided_2,
 		input check_twicex, check_twicey,
-
-		output ldmem_1,
-		output ldmem_2,
-		output ldmem_3,
-		output ldmem_4,
-		output lddec_1,
-		output lddec_2,
-		output col_check_1,
-		output col_check_2,
-		output update,
-		output health_dec,
-		output calc_health
+		input checkud, checklr,
+		
+		output reg ldmem_1,
+		output reg ldmem_2,
+		output reg ldmem_3,
+		output reg ldmem_4,
+		output reg lddec_1,
+		output reg lddec_2,
+		output reg col_check_1,
+		output reg col_check_2,
+		output reg update,
+		output reg health_dec,
+		output reg calc_health
 	);
 	reg [3:0]current_state, next_state;
 	
@@ -264,13 +269,11 @@ module ball_collision_control(
 					S_XDOWN 		= 4'd8,
 					S_CHANGE		= 4'd9,
 					S_LOADCOL_1	= 4'd10,
-					S_CAlC_1		= 4'd11,
+					S_CALC_1		= 4'd11,
 					S_HEALTH_1	= 4'd12,
 					S_LOADCOL_2	= 4'd13,
 					S_CALC_2		= 4'd14,
 					S_HEALTH_2	= 4'd15;
-					
-	wire checklr, checkud;
 	
 	always @(*)
    begin: state_table 
@@ -367,11 +370,13 @@ module ball_collision_datapath(
 	input ldmem_2,
 	input ldmem_3,
 	input ldmem_4,
+	input lddec_1,
 	input lddec_2,
 	input col_check_1,
 	input col_check_2,
 	input calc_health,
 	
+	input [9:0]size,
 	input x_du, y_du,
 	input [9:0]ballx, bally,
 	input [9:0]brickx, bricky,
@@ -382,7 +387,8 @@ module ball_collision_datapath(
 	output reg [1:0]game_health,
 	output reg [9:0] memx, memy,
 	output reg [9:0] col_x1, col_x2, col_y1, col_y2,
-	output reg collided_1, collided_2
+	output reg collided_1, collided_2,
+	output reg check_twicex, check_twicey
 	);
 
 	wire [9:0] ball_xedge, ball_yedge;
@@ -390,12 +396,6 @@ module ball_collision_datapath(
 	
 	assign ball_yedge = (y_du) ? (bally + size) : bally;
 	assign ball_xedge = (x_du) ? (ballx + size) : ballx;
-	
-	assign checklr = (ball_xedge % `BRICKX) == 0;
-	assign checkud = (ball_yedge % `BRICKY) == 0;
-	
-	assign check_twicex = ((ballx + size)/`BRICKX) > (ballx/`BRICKX);
-	assign check_twicey = ((bally + size)/`BRICKY) > (bally/`BRICKY);
 	
 	always @(posedge clk) begin
 		if(!resetn)begin
@@ -413,6 +413,14 @@ module ball_collision_datapath(
 			collided_2 <= 0;
 		end
 		else begin
+			
+			checklr = (ball_xedge % `BRICKX) == 0;
+			checkud = (ball_yedge % `BRICKY) == 0;
+			
+	
+			check_twicex = ((ballx + size)/`BRICKX) > (ballx/`BRICKX);
+			check_twicey = ((bally + size)/`BRICKY) > (bally/`BRICKY);
+		
 			if(ldmem_1)begin
 					memx <= ballx;
 					memy <= (y_du) ? ball_yedge + 1 : ball_yedge - 1;
@@ -438,22 +446,23 @@ module ball_collision_datapath(
 			end
 			if(lddec_2)begin
 				memx <= col_x2;
-				memy <= col_y3;
+				memy <= col_y2;
 			end
 			if(col_check_1)begin
-				if(|health)begin
+				if(|brick_health)begin
 					collided_1 = 1;
 					col_x1 <= brickx;
 					col_y1 <= bricky;
 				end
 			end
 			if(col_check_2)begin
-				if(|health)begin
+				if(|brick_health)begin
 					collided_2 = 1;
 					col_x2 <= brickx;
 					col_y2 <= bricky;
 				end
 			end
+		end
 	end
 endmodule
 
