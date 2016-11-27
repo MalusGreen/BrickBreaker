@@ -43,13 +43,14 @@ module x_counter(
 		if(!resetn)
 			c_x <= 10'b0;
 			
-		else
+		else begin
 			if(enable)begin 
 				if(updown)
 					c_x <= c_x + 1;
 				else
 					c_x <= c_x - 1;
 			end
+		end
 	end
 
 endmodule
@@ -67,13 +68,14 @@ module y_counter(
 		if(!resetn)
 			c_y <= 10'b0;
 			
-		else
+		else begin
 			if(enable)begin 
 				if(updown)
 					c_y <= c_y + 1;
 				else
 					c_y <= c_y - 1;
 			end
+		end
 	end
 
 endmodule
