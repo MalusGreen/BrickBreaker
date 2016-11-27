@@ -76,23 +76,23 @@ module ball_logic(
 		end
 		else begin
 			case (x)
-				x_max - size:	x_dir = 0;
-				0				:  x_dir = 1;
+				x_max - size:	x_dir <= 0;
+				0				:  x_dir <= 1;
 				default		:  begin
 					if(update & collided_2) begin
-						x_dir = ~x_dir;
+						x_dir <= ~x_dir;
 					end
 				end
 			endcase
 			case (y)
-				y_max - size: y_dir = 0;
-				0				: y_dir = 1;
+				y_max - size: y_dir <= 0;
+				0				: y_dir <= 1;
 				default		: begin 
 					if((plat_collided)) begin
-						y_dir = 0;
+						y_dir <= 0;
 					end
 					else if(update & collided_1)begin
-						y_dir = ~y_dir;
+						y_dir <= ~y_dir;
 					end
 				end
 			endcase
@@ -399,18 +399,18 @@ module ball_collision_datapath(
 	
 	always @(posedge clk) begin
 		if(!resetn)begin
-			checkud = 0;
-			checklr = 0;
-			game_write = 0;
-			game_health = 0;
-			memx = 0;
-			memy = 0;
-			col_x1 = 0;
-			col_x2 = 0;
-			col_y1 = 0;
-			col_y2 = 0;
-			collided_1 = 0;
-			collided_2 = 0;
+			checkud <= 0;
+			checklr <= 0;
+			game_write <= 0;
+			game_health <= 0;
+			memx <= 0;
+			memy <= 0;
+			col_x1 <= 0;
+			col_x2 <= 0;
+			col_y1 <= 0;
+			col_y2 <= 0;
+			collided_1 <= 0;
+			collided_2 <= 0;
 		end
 		else begin
 			if(ldmem_1)begin
