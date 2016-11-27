@@ -24,8 +24,11 @@ module brick_memory(
 		.address_out(address)
 	);
 	
+	wire [7:0]real_address;
+	
+	assign real_address = (|address[9:8]) ? 8'd0 : address[7:0];
 	memory bm(
-		.address(address[7:0]),
+		.address(real_address),
 		.clock(clk),
 		.data(health_in),
 		.wren(wren),

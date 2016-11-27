@@ -19,7 +19,8 @@ module ball_logic(
 	output [9:0] col_x1, col_x2, col_y1, col_y2,
 	
 	output collided_1, collided_2,
-	output test_collided
+	output test_collided,
+	output col_check_1, col_check_2
 	);
 	
 	reg x_dir, y_dir;
@@ -65,7 +66,10 @@ module ball_logic(
 		.col_y1(col_y1), 
 		.col_y2(col_y2),
 		.collided_1(collided_1), 
-		.collided_2(collided_2)
+		.collided_2(collided_2),
+		
+		.col_check_1(col_check_1),
+		.col_check_2(col_check_2)
 	);
 	
 	
@@ -99,7 +103,7 @@ module ball_logic(
 		end
 	end
 	
-	assign 	test_collided = collided_1;
+	assign 	test_collided = update & collided_1;
 	assign	x_du = x_dir;
 	assign	y_du = y_dir;
 	
@@ -150,19 +154,21 @@ module ball_collision(
 	output game_write,
 	output [9:0] memx, memy,
 	output [9:0] col_x1, col_x2, col_y1, col_y2,
-	output collided_1, collided_2
+	output collided_1, collided_2,
+	output col_check_1, col_check_2
 	);
 		
 		wire check_twicex, check_twicey;
-
+		wire checkud, checklr;
+		
 		wire ldmem_1;
 		wire ldmem_2;
 		wire ldmem_3;
 		wire ldmem_4;
 		wire lddec_1;
 		wire lddec_2;
-		wire col_check_1;
-		wire col_check_2;
+//		wire col_check_1;
+//		wire col_check_2;
 		wire health_dec;
 		wire calc_health;
 	
@@ -394,8 +400,8 @@ module ball_collision_datapath(
 	wire [9:0] ball_xedge, ball_yedge;
 	
 	
-	assign ball_yedge = (y_du) ? (bally + size) : bally;
-	assign ball_xedge = (x_du) ? (ballx + size) : ballx;
+	assign ball_yedge = (y_du) ? (bally + size + 1) : bally - 1;
+	assign ball_xedge = (x_du) ? (ballx + size + 1) : ballx - 1;
 	
 	always @(posedge clk) begin
 		if(!resetn)begin
@@ -414,31 +420,35 @@ module ball_collision_datapath(
 		end
 		else begin
 			
-			checklr = (ball_xedge % `BRICKX) == 0;
-			checkud = (ball_yedge % `BRICKY) == 0;
+			checkud = (ball_xedge % `BRICKX) == 0;
+			checklr = (ball_yedge % `BRICKY) == 0;
 			
 	
 			check_twicex = ((ballx + size)/`BRICKX) > (ballx/`BRICKX);
 			check_twicey = ((bally + size)/`BRICKY) > (bally/`BRICKY);
 		
 			if(ldmem_1)begin
+					collided_1 = 0;
 					memx <= ballx;
-					memy <= (y_du) ? ball_yedge + 1 : ball_yedge - 1;
+					memy <= ball_yedge;
 			end
 			if(ldmem_2)begin
+					collided_1 = 0;
 					memx <= ballx + `BRICKX;
-					memy <= (y_du) ? ball_yedge + 1 : ball_yedge - 1;
+					memy <= ball_yedge;
 			end
 			if(ldmem_3)begin
-					memx <= (x_du) ? ball_xedge + 1 : ball_xedge - 1;
+					collided_2 = 0;
+					memx <= ball_xedge;
 					memy <= bally;
 			end
 			if(ldmem_4)begin
-					memx <= (x_du) ? ball_xedge + 1 : ball_xedge - 1;
+					collided_2 = 0;
+					memx <= ball_xedge;
 					memy <= bally + `BRICKY;
 			end
 			if(calc_health)begin
-				game_health <= health - 1;
+				game_health <= brick_health - 1;
 			end
 			if(lddec_1)begin
 				memx <= col_x1;

@@ -219,6 +219,22 @@ module level_one(
 				health = 2'd3;
 			20'd5:
 				health = 2'd2;
+			20'd6:
+				health = 2'd2;
+			20'd7:
+				health = 2'd2;
+			20'd8:
+				health = 2'd2;
+			20'd9:
+				health = 2'd2;
+			20'd10:
+				health = 2'd2;
+			20'd11:
+				health = 2'd2;
+			20'd12:
+				health = 2'd2;
+			20'd13:
+				health = 2'd2;
 			20'd33:
 				health = 2'd1;
 			default:
