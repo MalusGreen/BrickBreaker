@@ -4,6 +4,7 @@
 //`include "delay_counter.v"
 //`include "platform.v"
 //`include "load_data.v"
+//`include "memory.v"
 
 `include "macros.v"
 
@@ -94,9 +95,9 @@ module brickbreaker(
 		.health(load_data)
 	);
 	
-	wire [9:0] mem_x_in, mem_y_in, game_x_in, game_y_in;
+	wire [9:0] mem_x_in, mem_y_in, mem_x_out, mem_y_out ,game_x_in, game_y_in;
 	wire mem_write, game_write;
-	wire [1:0]mem_in_health, game_health;
+	wire [1:0]mem_in_health, mem_out_health, game_health;
 	
 	assign mem_in_health = (loading) ? game_health : load_data;
 	assign mem_x_in = (loading) ? game_x_in : load_x;
@@ -105,7 +106,6 @@ module brickbreaker(
 	
 	brick_memory bm(
 		.clk(CLOCK_50),
-		.resetn(resetn),
 		.x_in(mem_x_in),
 		.y_in(mem_y_in),
 		.wren(mem_write),
@@ -131,6 +131,7 @@ module brickbreaker(
 		.inc_enable(inc_enable)
 	);
 	
+	wire test_col_1, test_col_2;
 	//game_logic
 	ball_logic balllogic(
 		.logic_go(inc_enable),
@@ -153,10 +154,12 @@ module brickbreaker(
 //		.game_health(game_health),
 //		.game_write(game_write)
 		
-		.memx(mem_x_),
-		.memy(),
+		.memx(game_x_in),
+		.memy(game_y_in),
 		
-		.test_collided(LEDR[0])
+		.test_collided(LEDR[0]),
+		.col_check_1(test_col_1),
+		.col_check_2(test_col_2)
 	);
 	
 	reg test;
@@ -167,9 +170,7 @@ module brickbreaker(
 			test <= ~test;
 	end
 	assign LEDR[1] = test;
-	assign LEDR[9] = loadingresetn;
-	assign LEDR[8] = resetn;
-	assign LEDR[7] = loading;
+	assign LEDR[9] = mem_write;
 	
 	ball_pos ballpos(
 		.enable(inc_enable),
@@ -190,13 +191,6 @@ module brickbreaker(
 	wire [9:0]x_vga,y_vga;
 	wire [2:0]colour_vga;
 	wire writeEn_vga;
-	
-
-	
-	assign brick_dx = 10'd0;
-	assign brick_dy = 10'd0;
-	assign brick_en = 1'b0;
-	assign brick_colour = 3'd0;
 	
 	//drawfunctions
 	ball_draw balldraw(
@@ -228,6 +222,42 @@ module brickbreaker(
 		.y_out(load_dy),
 		.color(load_colour)
 	);
+	
+	wire [9:0] fsm_brick_x, fsm_brick_y;
+	wire fsm_brick_draw;
+	
+	brick_fsm bfsm(
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		.go(go_bricks),
+		
+		.col_x1(col_x1), 
+		.col_x2(col_x2), 
+		.col_y1(col_y1), 
+		.col_y2(col_y2),
+		
+		.collided_1(col_1), 
+		.collided_2(col_2),
+		
+		.brickx(fsm_brick_x), 
+		.bricky(fsm_brick_y),
+		.go_draw(fsm_brick_draw)
+	);
+	
+		brick_draw bd(
+			.resetn(resetn),
+			.clk(CLOCK_50),
+			.go(fsm_brick_draw),
+			.health(2'd1),
+			.x_in(fsm_brick_x),
+			.y_in(fsm_brick_y),
+			
+			
+			.writeEn(brick_en),
+			.x_out(brick_dx),
+			.y_out(brick_dy),
+			.color(brick_colour)
+		);
 	
 //		brick_draw bd(
 //			.resetn(resetn),
@@ -316,7 +346,7 @@ module brickbreaker(
 	//delay
 	delay_counter delaycounter(
 		.clk(CLOCK_50),
-		.resetn(resetn),
+		.resetn(loading),
 		.delay(delay),
 		
 		.d_enable(enable)
@@ -346,7 +376,8 @@ module draw_fsm(
 					S_PLAT_LOAD		= 4'd5,
 					S_PLAT_DRAW		= 4'd6,
 					S_INC				= 4'd7,
-					S_CHANGE			= 4'd8;
+					S_INC_WAIT		= 4'd8,
+					S_CHANGE			= 4'd9;
 					
 	//CONSTANTS AND COUNTER VARIABLES
 	reg delay_reset, changecolour;
@@ -354,8 +385,9 @@ module draw_fsm(
 	reg [19:0] delay;
 	
 	assign ball_delay 	= 20'd30;
-	assign brick_delay	= `BRICKDRAW;
+	assign brick_delay	= `BRICKDRAWTWO;
 	assign plat_delay 	= 20'd30;
+	assign inc_delay		= 20'd30;
 	
 	wire [19:0]count;
 	
@@ -376,7 +408,8 @@ module draw_fsm(
 				S_BRICKS_DRAW: next_state = (count == delay) ? S_PLAT_LOAD : S_BRICKS_DRAW;
 				S_PLAT_LOAD: next_state = S_PLAT_DRAW;
 				S_PLAT_DRAW: next_state = (count == delay) ? S_INC : S_PLAT_DRAW;
-				S_INC: next_state = S_CHANGE;
+				S_INC: next_state = S_INC_WAIT;
+				S_INC_WAIT: next_state = (count == delay) ? S_CHANGE : S_INC_WAIT;
 				S_CHANGE: next_state = S_FSM_WAIT;
 				default: next_state = S_FSM_WAIT;
 		endcase
@@ -427,6 +460,11 @@ module draw_fsm(
 			S_INC: begin
 				if(~iscolour)
 					inc_enable = 1;
+				delay_reset = 0;
+			end
+			S_INC_WAIT:begin
+				delay = inc_delay;
+				draw_mux = 2'd1;
 			end
 			S_CHANGE: begin
 				changecolour = 1;
