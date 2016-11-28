@@ -16,4 +16,6 @@
 `define PLATY 10'd110
 `define PLATSIZE 10'd20
 `define BALLSIZE 10'd2
+`define BALLX 10'd64
+`define BALLY 10'd64
 `endif

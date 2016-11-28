@@ -45,23 +45,25 @@ module brick_fsm(
 	always @(*)begin
 		go_draw = 0;
 		delay_reset = 0;
-		brickx = col_x1;
-		bricky = col_y1;
+		brickx = 0;
+		bricky = 0;
 		case(current_state)
 			S_LOAD1	: begin
-				go_draw = 1;
 				brickx = col_x1;
 				bricky = col_y1;
 			end
 			S_DRAW1	: begin
+				if(collided_1)
+					go_draw = 1;
 				delay_reset = 1;
 			end
 			S_LOAD2	: begin
-				go_draw = 1;
 				brickx = col_x2;
 				bricky = col_y2;
 			end
 			S_DRAW2	: begin
+				if(collided_2)
+					go_draw = 1;
 				delay_reset = 1;
 			end
 		endcase
@@ -265,21 +267,21 @@ module br_datapath(
 		else begin
 			if(ld_x)begin
 				x  <= x_in;
-				qx <= `BRICKX - 1;
+				qx <= `BRICKX - 10'd1;
 				finished_col <= 0;
 				finished_all <= 0;
 			end
 			
 			if(ld_y)begin
 				y  <= y_in;
-				qy <= `BRICKY - 1;
+				qy <= `BRICKY - 10'd1;
 				finished_col <= 0;
 				finished_all <= 0;
 			end
 			
 			if(inc_x)begin
-				qx <= qx - 1;
-				qy <= `BRICKY - 1;
+				qx <= qx - 10'd1;
+				qy <= `BRICKY - 10'd1;
 				if(qx - 1 == 10'd0)
 					finished_all <= 1;
 				
@@ -287,7 +289,7 @@ module br_datapath(
 			end
 			
 			if(inc_y)begin
-				qy <= qy - 1;
+				qy <= qy - 10'd1;
 				if(qy - 1 == 10'd0)
 					finished_col <= 1;
 			end

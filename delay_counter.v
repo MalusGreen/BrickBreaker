@@ -21,6 +21,6 @@ module delay_counter(
 		end
 	end
 	
-	assign d_enable = (q == 40'b0) ? 1 : 0;
+	assign d_enable = (q == 40'b0) ? 1'b1 : 1'b0;
 
 endmodule

@@ -1,3 +1,5 @@
+`include "macros.v"
+
 module ball_pos(
 	input enable,
 	input clk,
@@ -41,14 +43,14 @@ module x_counter(
 	
 	always @ (posedge clk) begin
 		if(!resetn)
-			c_x <= 10'b0;
+			c_x <= `BALLX;
 			
 		else begin
 			if(enable)begin 
 				if(updown)
-					c_x <= c_x + 1;
+					c_x <= c_x + 10'd1;
 				else
-					c_x <= c_x - 1;
+					c_x <= c_x - 10'd1;
 			end
 		end
 	end
@@ -66,14 +68,14 @@ module y_counter(
 	
 	always @ (posedge clk) begin
 		if(!resetn)
-			c_y <= 10'b0;
+			c_y <= `BALLY;
 			
 		else begin
 			if(enable)begin 
 				if(updown)
-					c_y <= c_y + 1;
+					c_y <= c_y + 10'd1;
 				else
-					c_y <= c_y - 1;
+					c_y <= c_y - 10'd1;
 			end
 		end
 	end

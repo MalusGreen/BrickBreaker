@@ -133,16 +133,16 @@ module datapath(
 		end
 		else begin
 			if(enable & left & x > 10'd0) 
-				x <= x - 1;
+				x <= x - 10'd1;
 			else if(enable & right & x < 10'd159) 
-				x <= x + 1;
+				x <= x + 10'd1;
 			if(ld_x)begin
-				qx <= size - 1;
+				qx <= size - 10'd1;
 				finished_row <= 0;
 			end
 			
 			if(inc_x)begin
-				qx <= qx - 1;
+				qx <= qx - 10'd1;
 				if(qx == 10'd0)
 					finished_row <= 1;
 			end
