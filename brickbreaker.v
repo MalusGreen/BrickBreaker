@@ -142,6 +142,7 @@ module brickbreaker(
 	wire [9:0] col_x1, col_x2, col_y1, col_y2;
 	wire [1:0] col_health1, col_health2;
 	wire collided_1, collided_2;
+	wire plat_col;
 	//game_logic
 	ball_logic balllogic(
 		.logic_go(logic_go),
@@ -178,48 +179,15 @@ module brickbreaker(
 	
 		.collided_1(collided_1), 
 		.collided_2(collided_2),
-//		.test_collided(LEDR[0]),
-		.col_check_1(test_col_1),
-		.col_check_2(test_col_2),
-		.col_check_3(test_col_3)
+		.plat_collided(plat_col)
 	);
-	
-	reg test, test1, test2, test3;
-	always @(posedge collided_1)begin
-		if(!resetn)
-			test <= 0;
-		else
-			test <= ~test;
-	end
-	always @(posedge collided_2)begin
-		if(!resetn)
-			test1 <= 0;
-		else
-			test1 <= ~test1;
-	end
-	always @(posedge test_col_2)begin
-		if(!resetn)
-			test2 <= 0;
-		else
-			test2 <= ~test2;
-	end
-	always @(posedge test_col_3)begin
-		if(!resetn)
-			test3 <= 0;
-		else
-			test3 <= ~test3;
-	end
-	assign LEDR[0] = test;
-	assign LEDR[1] = test1;
-	assign LEDR[3] = test2;
-	assign LEDR[4] = test3;
-	
-	assign LEDR[9] = mem_write;
 	
 	ball_pos ballpos(
 		.enable(inc_enable),
 		.resetn(resetn),
 		.clk(CLOCK_50),
+		.plat_col(plat_col),
+		.platx(platx),
 		
 		.x_du(x_du),
 		.y_du(y_du),

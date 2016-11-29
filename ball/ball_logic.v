@@ -19,12 +19,10 @@ module ball_logic(
 	output [9:0] col_x1, col_x2, col_y1, col_y2,
 	output [1:0] col_health1, col_health2,
 	output collided_1, collided_2,
-	output test_collided,
-	output col_check_1, col_check_2, col_check_3
+	output plat_collided
 	);
 	
 	reg x_dir, y_dir;
-	wire plat_collided;
 	wire update;
 	
 	ball_platform bp(
