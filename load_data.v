@@ -180,9 +180,21 @@ module load_mux(
 		.health(health_1)
 	);
 	
+	level_two l2(
+		.count(count),
+		.health(health_2)
+	);
+	
+	level_three l3(
+		.count(count),
+		.health(health_3)
+	);
+	
 	always @(*)begin
 		case(selection)
-			10'b0:	health = health_1;
+			10'd0:	health = health_1;
+			10'd1:	health = health_2;
+			10'd2:	health = health_3;
 		default:
 			health = health_1;
 		endcase
@@ -209,38 +221,36 @@ module level_one(
 	
 	always @(*)begin
 		case (count)
-			20'd1:
-				health = 2'd3;
-			20'd2:
+			20'd17:
 				health = 2'd1;
-			20'd3:
+			20'd18:
+				health = 2'd2;
+			20'd19:
 				health = 2'd3;
-			20'd4:
-				health = 2'd3;
-			20'd5:
-				health = 2'd2;
-			20'd6:
-				health = 2'd2;
-			20'd7:
-				health = 2'd2;
-			20'd8:
-				health = 2'd2;
-			20'd9:
-				health = 2'd2;
-			20'd10:
-				health = 2'd2;
-			20'd11:
-				health = 2'd2;
-			20'd12:
-				health = 2'd2;
-			20'd13:
-				health = 2'd2;
-			20'd14:
-				health = 2'd2;
-			20'd15:
-				health = 2'd2;
-			20'd33:
+			20'd20:
 				health = 2'd1;
+			20'd21:
+				health = 2'd2;
+			20'd22:
+				health = 2'd3;
+			20'd23:
+				health = 2'd1;
+			20'd24:
+				health = 2'd2;
+			20'd25:
+				health = 2'd3;
+			20'd26:
+				health = 2'd1;
+			20'd27:
+				health = 2'd2;
+			20'd28:
+				health = 2'd3;
+			20'd29:
+				health = 2'd1;
+			20'd30:
+				health = 2'd2;
+			20'd31:
+				health = 2'd3;
 			20'd49:
 				health = 2'd1;
 			default:
@@ -248,4 +258,49 @@ module level_one(
 		endcase
 	end
 		
+endmodule
+
+module level_two(
+	input [19:0]count,
+	
+	output reg [1:0]health
+	);
+	
+	always @(*)begin
+		case (count)
+			20'd1:
+				health = 2'd1;
+			20'd17:
+				health = 2'd1;
+			20'd33:
+				health = 2'd1;
+			20'd49:
+				health = 2'd1;
+			20'd65:
+				health = 2'd1;
+			20'd81:
+				health = 2'd1;
+			20'd97:
+				health = 2'd1;
+			20'd113:
+				health = 2'd1;
+			default:
+				health = 2'd0;
+		endcase
+	end
+		
+endmodule
+
+module level_three(
+	input [19:0]count,
+	
+	output reg [1:0]health
+	);
+	
+	always @(*)begin
+		case(count)
+			default: health = 2'd2;
+		endcase
+	end
+	
 endmodule

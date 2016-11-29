@@ -4,12 +4,58 @@ module brick_fsm(
 	input go,
 	
 	input [9:0] col_x1, col_x2, col_y1, col_y2,
-	
+	input [1:0] col_health1, col_health2,
 	input collided_1, collided_2,
 	
-	output reg [9:0]brickx, bricky,
-	output reg go_draw
+	output [1:0]brickhealth,
+	output [9:0]brickx, bricky,
+	output go_draw
 );
+	wire ld1, ld2;
+	
+	brick_control bc(
+		.resetn(resetn),
+		.clk(clk),
+		.go(go),
+		
+		.collided_1(collided_1),
+		.collided_2(collided_2),
+		.ld1(ld1),
+		.ld2(ld2),
+		.go_draw(go_draw)
+	);
+	
+	brick_datapath bd(
+		.resetn(resetn),
+		.clk(clk),
+
+		.ld1(ld1), 
+		.ld2(ld2),
+	
+		.col_x1(col_x1), 
+		.col_x2(col_x2), 
+		.col_y1(col_y1), 
+		.col_y2(col_y2),
+		.col_health1(col_health1), 
+		.col_health2(col_health2),
+	
+		.brickhealth(brickhealth),
+		.brickx(brickx), 
+		.bricky(bricky)
+	);
+	
+endmodule
+
+module brick_control(
+	input resetn,
+	input clk,
+	
+	input collided_1, collided_2,
+	input go,
+	
+	output reg ld1, ld2,
+	output reg go_draw
+	);
 	reg [2:0]current_state, next_state;
 	
 	wire [19:0]count;
@@ -19,10 +65,12 @@ module brick_fsm(
 	
 	localparam	S_WAIT	=	3'd0,
 					S_LOAD1	=	3'd1,
-					S_DRAW1	=	3'd2,
-					S_LOAD2	=	3'd3,
-					S_DRAW2	=	3'd4;
-	
+					S_LDW1	=  3'd2,
+					S_DRAW1	=	3'd3,
+					S_LOAD2	=	3'd4,
+					S_LDW2	=  3'd5,
+					S_DRAW2	=	3'd6;
+
 	counter brickdrawdelay(
 		.enable(1'b1),
 		.clk(clk),
@@ -34,36 +82,40 @@ module brick_fsm(
 	always @(*)begin
 		case(current_state)
 				S_WAIT	:	next_state = (go) ? S_LOAD1 : S_WAIT;
-				S_LOAD1	:	next_state = S_DRAW1;
+				S_LOAD1	:	next_state = S_LDW1;
+				S_LDW1	:	next_state = S_DRAW1;
 				S_DRAW1	:	next_state = (count == `BRICKDRAW) ? S_LOAD2 : S_DRAW1;
-				S_LOAD2	:	next_state = S_DRAW2;
+				S_LOAD2	:	next_state = S_LDW2;
+				S_LDW2	:	next_state = S_DRAW2;
 				S_DRAW2	:	next_state = (count == `BRICKDRAW) ? S_WAIT : S_DRAW2;
 				default: next_state = S_WAIT;
 		endcase
 	end
 	
 	always @(*)begin
+		ld1 = 0;
+		ld2 = 0;
 		go_draw = 0;
 		delay_reset = 0;
-		brickx = 0;
-		bricky = 0;
 		case(current_state)
 			S_LOAD1	: begin
-				brickx = col_x1;
-				bricky = col_y1;
+				ld1 = 1;
 			end
-			S_DRAW1	: begin
+			S_LDW1	:begin
 				if(collided_1)
 					go_draw = 1;
+			end
+			S_DRAW1	: begin
 				delay_reset = 1;
 			end
 			S_LOAD2	: begin
-				brickx = col_x2;
-				bricky = col_y2;
+				ld2 = 1;
 			end
-			S_DRAW2	: begin
+			S_LDW2	:begin
 				if(collided_2)
 					go_draw = 1;
+			end
+			S_DRAW2	: begin
 				delay_reset = 1;
 			end
 		endcase
@@ -77,7 +129,38 @@ module brick_fsm(
 	  else
 			current_state <= next_state;
 	end // state_FFS
+endmodule
 
+module brick_datapath(
+	input resetn,
+	input clk,
+
+	input ld1, ld2,
+	
+	input [9:0] col_x1, col_x2, col_y1, col_y2,
+	input [1:0] col_health1, col_health2,
+	
+	output reg [1:0]brickhealth,
+	output reg [9:0]brickx, bricky
+	);
+	
+	always @(posedge clk)begin
+		if(!resetn)begin
+			brickx <= 0;
+			bricky <= 0;
+			brickhealth <= 0;
+		end
+		else if(ld1)begin
+			brickx <= col_x1;
+			bricky <= col_y1;
+			brickhealth <= col_health1;
+		end
+		else if(ld2)begin
+			brickx <= col_x2;
+			bricky <= col_y2;
+			brickhealth <= col_health2;
+		end
+	end
 endmodule
 
 module brick_draw(

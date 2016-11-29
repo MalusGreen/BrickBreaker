@@ -5,6 +5,9 @@
 //`include "platform.v"
 //`include "load_data.v"
 //`include "memory.v"
+//`include "bricks/address_xy.v"
+//`include "bricks/brick_memory.v"
+//`include "bricks/brick_draw.v"
 
 `include "macros.v"
 
@@ -47,6 +50,7 @@ module brickbreaker(
 	
 	wire logic_go;
 	assign resetn = KEY[0];
+	assign start = KEY[1];
 	assign left = ~KEY[3];
 	assign right = ~KEY[2];
 	
@@ -79,7 +83,7 @@ module brickbreaker(
 	assign screen_y = 10'd120 - 10'd1;
 	assign delay = 40'd833333;
 //	assign delay = 40'd1666666;
-//	assign delay = 40'd32;
+//	assign delay = 40'd256;
 	assign size = 10'd2;
 	
 	load_data ld(
@@ -136,7 +140,7 @@ module brickbreaker(
 	wire test_col_1, test_col_2, test_col_3;
 	
 	wire [9:0] col_x1, col_x2, col_y1, col_y2;
-	
+	wire [1:0] col_health1, col_health2;
 	wire collided_1, collided_2;
 	//game_logic
 	ball_logic balllogic(
@@ -156,7 +160,7 @@ module brickbreaker(
 		
 		.x_du(x_du),
 		.y_du(y_du),
-		
+//		
 		.game_health(game_health),
 		.game_write(game_write),
 		
@@ -168,23 +172,26 @@ module brickbreaker(
 		.col_x2(col_x2), 
 		.col_y1(col_y1), 
 		.col_y2(col_y2),
+		
+		.col_health1(col_health1),
+		.col_health2(col_health2),
 	
 		.collided_1(collided_1), 
 		.collided_2(collided_2),
-		.test_collided(LEDR[0]),
+//		.test_collided(LEDR[0]),
 		.col_check_1(test_col_1),
 		.col_check_2(test_col_2),
 		.col_check_3(test_col_3)
 	);
 	
 	reg test, test1, test2, test3;
-	always @(posedge LEDR[0])begin
+	always @(posedge collided_1)begin
 		if(!resetn)
 			test <= 0;
 		else
 			test <= ~test;
 	end
-	always @(posedge test_col_1)begin
+	always @(posedge collided_2)begin
 		if(!resetn)
 			test1 <= 0;
 		else
@@ -202,9 +209,8 @@ module brickbreaker(
 		else
 			test3 <= ~test3;
 	end
-	
-	assign LEDR[1] = test;
-	assign LEDR[2] = test1;
+	assign LEDR[0] = test;
+	assign LEDR[1] = test1;
 	assign LEDR[3] = test2;
 	assign LEDR[4] = test3;
 	
@@ -219,6 +225,17 @@ module brickbreaker(
 		.y_du(y_du),
 		.x(ball_x),
 		.y(ball_y)
+	);
+	
+	wire [9:0] test_address, test_x, test_y;
+	
+	address_xy fuck(
+		.x_in(ball_y),
+		.y_in(ball_x),
+		.address_in(test_address),
+		.address_out(test_address),
+		.x_out(test_x),
+		.y_out(test_y)
 	);
 	
 	//Wires for draw values.
@@ -261,6 +278,7 @@ module brickbreaker(
 	);
 	
 	wire [9:0] fsm_brick_x, fsm_brick_y;
+	wire [1:0] fsm_brick_health;
 	wire fsm_brick_draw;
 	
 	brick_fsm bfsm(
@@ -273,9 +291,13 @@ module brickbreaker(
 		.col_y1(col_y1), 
 		.col_y2(col_y2),
 		
+		.col_health1(col_health1),
+		.col_health2(col_health2),
+		
 		.collided_1(collided_1), 
 		.collided_2(collided_2),
 		
+		.brickhealth(fsm_brick_health),
 		.brickx(fsm_brick_x), 
 		.bricky(fsm_brick_y),
 		.go_draw(fsm_brick_draw)
@@ -285,7 +307,8 @@ module brickbreaker(
 			.resetn(resetn),
 			.clk(CLOCK_50),
 			.go(fsm_brick_draw),
-			.health(2'd2),
+//			.go(1'b0),
+			.health(fsm_brick_health),
 			.x_in(fsm_brick_x),
 			.y_in(fsm_brick_y),
 			
@@ -295,21 +318,6 @@ module brickbreaker(
 			.y_out(brick_dy),
 			.color(brick_colour)
 		);
-	
-//		brick_draw bd(
-//			.resetn(resetn),
-//			.clk(CLOCK_50),
-//			.go(go_bricks),
-//			.health(brick_health),
-//			.x_in(brick_x),
-//			.y_in(brick_y),
-//			
-//			
-//			.writeEn(brick_en),
-//			.x_out(brick_dx),
-//			.y_out(brick_dy),
-//			.color(brick_colour)
-//		);
 	
 	platform platlog(
 		.clk(CLOCK_50),
@@ -380,14 +388,25 @@ module brickbreaker(
 		.VGA_B(VGA_B)   						   //	VGA Blue[9:0]
 	);
 	
+	wire delay_enable;
 	//delay
 	delay_counter delaycounter(
 		.clk(CLOCK_50),
-		.resetn(loading),
+		.resetn(resetn),
 		.delay(delay),
 		
-		.d_enable(enable)
+		.d_enable(delay_enable)
 	);
+	
+	reg go;
+	always @(posedge start)begin
+		if(!resetn)
+			go = 0;
+		else
+			go = 1;
+	end
+	
+	assign enable = delay_enable & go;
 	
 endmodule
 
@@ -442,14 +461,34 @@ module draw_fsm(
 		case (current_state)
 				S_FSM_WAIT: next_state = (enable | iscolour) ? S_BALL_LOAD : S_FSM_WAIT;
 				S_BALL_LOAD: next_state = S_BALL_DRAW;
-				S_BALL_DRAW: next_state = (count == delay) ? S_BRICKS_LOAD : S_BALL_DRAW;
+				S_BALL_DRAW:
+				begin
+					if(iscolour)begin
+						next_state = (count == delay) ? S_BRICKS_LOAD : S_BALL_DRAW;
+					end
+					else
+						next_state = S_PLAT_LOAD;
+				end
 				S_BRICKS_LOAD: next_state = S_BRICKS_DRAW;
 				S_BRICKS_DRAW: next_state = (count == delay) ? S_PLAT_LOAD : S_BRICKS_DRAW;
 				S_PLAT_LOAD: next_state = S_PLAT_DRAW;
-				S_PLAT_DRAW: next_state = (count == delay) ? S_INC : S_PLAT_DRAW;
-				S_INC: next_state = S_COL;
+				S_PLAT_DRAW:
+				begin
+					if((count == delay))begin
+						if(iscolour)begin
+							next_state = S_INC;
+						end
+						else begin 
+							next_state = S_COL;
+						end
+					end
+					else begin
+						next_state = S_PLAT_DRAW;
+					end
+				end
 				S_COL: next_state = S_COL_WAIT;
-				S_COL_WAIT: next_state = (count == delay) ? S_CHANGE : S_COL_WAIT;
+				S_COL_WAIT: next_state = (count == delay) ? S_INC : S_COL_WAIT;
+				S_INC: next_state = S_CHANGE;
 				S_CHANGE: next_state = S_FSM_WAIT;
 				default: next_state = S_FSM_WAIT;
 		endcase
@@ -505,6 +544,7 @@ module draw_fsm(
 			S_COL:begin
 				if(~iscolour)
 					logic_go = 1;
+				delay_reset = 0;
 			end
 			S_COL_WAIT:begin
 				delay = inc_delay;
@@ -574,7 +614,7 @@ module draw(
 	defparam VGA.MONOCHROME = "FALSE";
 	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
 	defparam VGA.BACKGROUND_IMAGE = "black.mif";
-//	
+	
 endmodule
 
 module draw_mux(

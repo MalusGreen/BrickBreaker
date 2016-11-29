@@ -17,7 +17,7 @@ module ball_logic(
 	output x_du, y_du,
 	
 	output [9:0] col_x1, col_x2, col_y1, col_y2,
-	
+	output [1:0] col_health1, col_health2,
 	output collided_1, collided_2,
 	output test_collided,
 	output col_check_1, col_check_2, col_check_3
@@ -66,6 +66,9 @@ module ball_logic(
 		.col_1(collided_1), 
 		.col_2(collided_2), 
 		
+		.col_health1(col_health1),
+		.col_health2(col_health2),
+		
 		.col_check_1(col_check_1), 
 		.col_check_2(col_check_2),
 		.col_check_3(col_check_3)
@@ -102,7 +105,7 @@ module ball_logic(
 		end
 	end
 	
-	assign 	test_collided = update & collided_1;
+	assign 	test_collided = update;
 	assign	x_du = x_dir;
 	assign	y_du = y_dir;
 	
@@ -153,13 +156,16 @@ module ball_collision(
 	output [9:0]col_x1, col_x2, col_y1, col_y2,
 	output col_1, col_2,
 	
+	output [1:0] col_health1, col_health2,
+	
 	output col_check_1, 
 	output col_check_2,
 	output col_check_3
 	);
 	
 	
-	wire ldmem1, ldmem2, ldmem3,
+	wire waiting,
+		  ldmem1, ldmem2, ldmem3,
 		  ckcol1, ckcol2, ckcol3,
 		  dec1, dec2, dec3;
 	
@@ -171,6 +177,7 @@ module ball_collision(
 		.col_1(col_1),
 		.col_2(col_2),
 		
+		.waiting(waiting),
 		.ldmem1(ldmem1), 
 		.ldmem2(ldmem2), 
 		.ldmem3(ldmem3), 
@@ -187,6 +194,7 @@ module ball_collision(
 		.resetn(resetn),
 		.clk(clk),
 		
+		.waiting(waiting),
 		.ldmem1(ldmem1), 
 		.ldmem2(ldmem2), 
 		.ldmem3(ldmem3), 
@@ -214,6 +222,9 @@ module ball_collision(
 		.col_y1(col_y1), 
 		.col_y2(col_y2), 
 		
+		.col_health1(col_health1),
+		.col_health2(col_health2),
+		
 		.col_1(col_1),
 		.col_2(col_2)
 	);
@@ -231,6 +242,7 @@ module ball_col_control(
 	
 	input col_1, col_2,
 	
+	output reg waiting,
 	output reg ldmem1, ldmem2, ldmem3,
 	output reg ckcol1, ckcol2, ckcol3,
 	output reg dec1, dec2, dec3,
@@ -241,26 +253,32 @@ module ball_col_control(
 	
 	localparam 	S_WAIT	= 4'd0, 
 					S_LDMEM1 = 4'd1, 
-					S_CKCOL1 = 4'd2, 
-					S_DEC1	= 4'd3, 
-					S_LDMEM2 = 4'd4, 
-					S_CKCOL2 = 4'd5, 
-					S_DEC2	= 4'd6, 
-					S_LDMEM3 = 4'd7, 
-					S_CKCOL3 = 4'd8, 
-					S_DEC3	= 4'd9,
-					S_UPDATE = 4'd10;
+					S_LDMEMW1= 4'd2,
+					S_CKCOL1 = 4'd3, 
+					S_DEC1	= 4'd4, 
+					S_LDMEM2 = 4'd5, 
+					S_LDMEMW2= 4'd6, 
+					S_CKCOL2 = 4'd7, 
+					S_DEC2	= 4'd8, 
+					S_LDMEM3 = 4'd9, 
+					S_LDMEMW3= 4'd10, 
+					S_CKCOL3 = 4'd11, 
+					S_DEC3	= 4'd12,
+					S_UPDATE = 4'd13;
 
 	always @(*)begin
 		case (current_state)
 					S_WAIT	: next_state = (logic_go) ? S_LDMEM1 : S_WAIT;
-					S_LDMEM1 : next_state = S_CKCOL1;
+					S_LDMEM1 : next_state = S_LDMEMW1;
+					S_LDMEMW1: next_state = S_CKCOL1;
 					S_CKCOL1 : next_state = S_DEC1;
 					S_DEC1	: next_state = S_LDMEM2;
-					S_LDMEM2 : next_state = S_CKCOL2;
+					S_LDMEM2 : next_state = S_LDMEMW2;
+					S_LDMEMW2: next_state = S_CKCOL2;
 					S_CKCOL2 : next_state = S_DEC2;
 					S_DEC2	: next_state = S_LDMEM3;
-					S_LDMEM3 : next_state = (col_1 | col_2) ? S_WAIT : S_CKCOL3;
+					S_LDMEM3 : next_state = (col_1 | col_2) ? S_UPDATE : S_LDMEMW3;
+					S_LDMEMW3: next_state = S_CKCOL3;
 					S_CKCOL3 : next_state = S_DEC3;
 					S_DEC3	: next_state = S_UPDATE;
 					S_UPDATE	: next_state = S_WAIT;
@@ -269,6 +287,7 @@ module ball_col_control(
 	end
 	
 	always @(*)begin
+		waiting= 0;
 		ldmem1 = 0;
 		ldmem2 = 0;
 		ldmem3 = 0;
@@ -281,7 +300,7 @@ module ball_col_control(
 		update = 0;
 		
 		case(current_state)
-				S_WAIT	:
+				S_WAIT	: waiting= 1;
 				S_LDMEM1 : ldmem1 = 1;
 				S_CKCOL1 : ckcol1 = 1;
 				S_DEC1	: dec1	= 1;
@@ -308,7 +327,8 @@ endmodule
 module ball_col_datapath(
 	input resetn,
 	input clk,
-
+	
+	input waiting,
 	input ldmem1, ldmem2, ldmem3,
 	input ckcol1, ckcol2, ckcol3,
 	input dec1, dec2, dec3, 
@@ -322,13 +342,11 @@ module ball_col_datapath(
 	output reg game_write,
 	output reg [9:0] memx, memy,
 	output reg [9:0] col_x1, col_x2, col_y1, col_y2,
-	output reg col_1, col_2
+	output reg col_1, col_2,
+	output reg [1:0] col_health1, col_health2
 	);
 	
-	wire [9:0] x_new, y_new;
-	
-	assign x_new = (x_du) ? ballx + 10'd1: ballx - 10'd1;
-	assign y_new = (y_du) ? bally + 10'd1: bally - 10'd1;
+	reg [9:0] x_new, y_new;
 	
 	always @(posedge clk)begin
 		if(!resetn)begin
@@ -342,6 +360,13 @@ module ball_col_datapath(
 			col_2 <= 0;
 			game_health <= 0;
 			game_write <= 0;
+			
+			col_health1 <= 0;
+			col_health2 <= 0;
+		end
+		else if(waiting)begin
+			x_new <= (x_du) ? ballx + 10'd1: ballx - 10'd1;
+			y_new <= (y_du) ? bally + 10'd1: bally - 10'd1;
 		end
 		else if(ldmem1)begin
 			col_1 <= 0;
@@ -390,16 +415,20 @@ module ball_col_datapath(
 		else if(dec1)	 begin
 			if(col_1)begin
 				game_write = 1;
+				col_health1 <= game_health;
 			end
 		end
 		else if(dec2)	 begin
 			if(col_2)begin
 				game_write = 1;
+				col_health2 <= game_health;
 			end
 		end
 		else if(dec3)	 begin
 			if(col_1)begin
 				game_write = 1;
+				col_health1 <= game_health;
+				col_health2 <= game_health;
 			end
 		end
 	end

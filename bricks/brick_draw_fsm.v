@@ -17,7 +17,12 @@ module brick_draw_fsm(
 		case(current_state)
 			S_INIT: next_state = (start) ? S_DRAW : S_INIT;
 			S_DRAW: next_state = S_WAIT;
-			S_WAIT: next_state = (y_out == 10'd20) ? S_INIT : S_DRAW;
+			S_WAIT: begin
+				if(start)begin
+					next_state = (y_out == 10'd20) ? S_INIT : S_DRAW;
+				end
+					next_state = S_WAIT;
+			end
 			default: next_state = S_INIT;
 			
 		endcase
@@ -26,22 +31,22 @@ module brick_draw_fsm(
 	always @(*) begin
 		case(current_state)
 			S_INIT: begin
-				x_out = 1'd0;
-				y_out = 1'd0;
+				x_out <= 10'd0;
+				y_out <= 10'd0;
 				
-				draw = 1'd0;
+				draw <= 1'd0;
 			end
 			S_DRAW: begin
-				x_out = x_out + 10'd10;
+				x_out <= x_out + 10'd10;
 				if(x_out == 10'd160) begin
-					x_out = 10'd0;
-					y_out = y_out + 10'd5;
+					x_out <= 10'd0;
+					y_out <= y_out + 10'd5;
 				end
 				
-				draw = 1'd1;
+				draw <= 1'd1;
 			end
 			S_WAIT: begin
-				draw = 1'd0;
+				draw <= 1'd0;
 			end
 		endcase
 	end 
