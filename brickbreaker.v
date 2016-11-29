@@ -336,10 +336,10 @@ module brickbreaker(
 		if(opening)begin
 			flags = 2'd0;
 		end
-		else if(win)begin
+		else if(win_occurred)begin
 			flags = 2'd1;
 		end
-		else if(lose)begin
+		else if(loss_occurred)begin
 			flags = 2'd2;
 		end
 	end
@@ -349,9 +349,9 @@ module brickbreaker(
 	
 	pic_memory(
 		.resetn(resetn),
-		.clk(clk),
+		.clk(CLOCK_50),
 		
-		.enable(opening | win_occurred | lose_occurred),
+		.enable(opening | win_occurred | loss_occurred),
 		.screen_select(flags),
 		
 		.x(screen_dx), 
@@ -361,6 +361,10 @@ module brickbreaker(
 	
 	//MUX
 	draw_mux drawmux(
+		.opening(opening),
+		.win(win_occurred),
+		.lose(loss_occurred),
+	
 		.ball_x(ball_dx),
 		.brick_x(brick_dx),
 		.plat_x(plat_dx),
