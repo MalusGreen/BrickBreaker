@@ -1,4 +1,4 @@
-`include "macros.v"
+//`include "macros.v"
 
 module lose_checker(
 	input clk,
