@@ -1,4 +1,3 @@
-
 `include "macros.v"
 
 module load_data(
@@ -11,6 +10,7 @@ module load_data(
 	output [9:0]x_out, y_out,
 	output [9:0]address,
 	output [1:0]health,
+	output [9:0]total_health,
 	output writeEn
 	);
 	
@@ -45,7 +45,8 @@ module load_data(
 		.x_out(x_out),
 		.y_out(y_out),
 		.address(address),
-		.health(health)
+		.health(health),
+		.total_health(total_health)
 	);
 	
 endmodule
@@ -124,7 +125,8 @@ module load_datapath(
 	output done_draw,
 	output [9:0]x_out, y_out,
 	output [9:0]address,
-	output [1:0]health
+	output [1:0]health,
+	output [9:0]total_health
 	);
 	
 	wire [19:0]draw_count;
@@ -159,7 +161,8 @@ module load_datapath(
 		.x_out(x_out),
 		.y_out(y_out),
 		.address(address),
-		.health(health)
+		.health(health),
+		.total_health(total_health)
 	);
 	
 endmodule
@@ -170,7 +173,8 @@ module load_mux(
 		
 		output [9:0]x_out, y_out,
 		output [9:0]address,
-		output reg [1:0]health
+		output reg [1:0]health,
+		output reg [9:0]total_health
 	);
 	
 	wire [1:0]health_1, health_2, health_3;
@@ -192,11 +196,22 @@ module load_mux(
 	
 	always @(*)begin
 		case(selection)
-			10'd0:	health = health_1;
-			10'd1:	health = health_2;
-			10'd2:	health = health_3;
-		default:
+			10'd0: begin
+				health = health_1;
+				total_health = `LV1HP;
+			end
+			10'd1: begin
+				health = health_2;
+				total_health = `LV2HP;
+			end
+			10'd2: begin
+				health = health_3;
+				total_health = `LV3HP;
+			end
+		default: begin
 			health = health_1;
+			total_health = `LV1HP;
+		end 
 		endcase
 	end
 	

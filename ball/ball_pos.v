@@ -23,22 +23,22 @@ module ball_pos(
 	assign x = full_x[19:10];
 	assign y = full_y[19:10];
 	
-	xy_changer(
-		.resetn(resetn),
-		.clk(clk),
-		
-		.x(x),
-		.platx(platx),
-		.plat_col(plat_col),
-		.change(change)
-	);
+//	xy_changer(
+//		.resetn(resetn),
+//		.clk(clk),
+//		
+//		.x(x),
+//		.platx(platx),
+//		.plat_col(plat_col),
+//		.change(change)
+//	);
 	
 	x_counter xc(
 		.enable(enable),
 		.clk(clk),
 		.resetn(resetn),
 		
-		.change(change),
+		.change(20'b0000000010000000000),
 		.updown(x_du),
 		.c_x(full_x)
 	);

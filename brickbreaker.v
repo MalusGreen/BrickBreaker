@@ -97,17 +97,42 @@ module brickbreaker(
 		.x_out(load_x),
 		.y_out(load_y),
 		.address(load_address),
-		.health(load_data)
+		.health(load_data),
+		.total_health(total_health)
 	);
 	
 	wire [9:0] mem_x_in, mem_y_in, mem_x_out, mem_y_out ,game_x_in, game_y_in;
 	wire mem_write, game_write;
 	wire [1:0]mem_in_health, mem_out_health, game_health;
+	wire win_occurred, loss_occurred;
+	wire total_health;
 	
 	assign mem_in_health = (loading) ? game_health : load_data;
 	assign mem_x_in = (loading) ? game_x_in : load_x;
 	assign mem_y_in = (loading) ? game_y_in : load_y;
 	assign mem_write = (loading) ? game_write : load_write;
+	
+	assign LEDR[0] = win_occurred;
+	assign LEDR[9] = loss_occurred;
+	
+	win_checker w_check(
+		.clk(CLOCK_50),
+		.resetn(resetn),
+		.game_write(game_write),
+		.total_health(total_health),
+			
+		.win_occurred(win_occurred)
+	);
+	
+	lose_checker l_check(
+		.clk(CLOCK_50),
+		.resetn(resetn),
+		.ball_y(ball_y),
+		.starting_health(10'd3),
+		
+		.loss_occurred(loss_occurred)
+	);
+	
 	
 	brick_memory bm(
 		.clk(CLOCK_50),

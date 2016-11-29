@@ -19,4 +19,7 @@
 `define BALLSIZE 10'd2
 `define BALLX 10'd64
 `define BALLY 10'd64
+`define LV1HP 10'd31
+`define LV2HP 10'd8
+`define LV3HP 10'd256
 `endif
