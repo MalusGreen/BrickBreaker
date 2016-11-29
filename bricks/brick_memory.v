@@ -1,6 +1,6 @@
 //`include "memory.v"
 //`include "address_xy.v"
-//`include "macros.v"
+`include "macros.v"
 
 module brick_memory(
 		input clk,

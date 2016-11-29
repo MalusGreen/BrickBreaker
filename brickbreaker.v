@@ -611,12 +611,16 @@ module draw(
 endmodule
 
 module draw_mux(
-	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,load_x,load_y,
-	input [2:0]ball_colour,brick_colour,plat_colour,load_colour,
+	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,load_x,load_y, opening_x, opening_y, win_x, win_y, lose_x, lose_y,
+	input [2:0]ball_colour,brick_colour,plat_colour,load_colour, opening_colour, win_colour, lose_colour,
 	input ball_en, brick_en, plat_en, load_en,
 	input [1:0]draw_mux,
 	input iscolour,
 	input isloading,
+	
+	input opening,
+	input win,
+	input lose,
 	
 	output reg [9:0]x,y,
 	output reg [2:0]colour,
@@ -626,7 +630,25 @@ module draw_mux(
 	localparam BLACK = 3'b000;
 	
 	always @(*)begin
-		if(isloading)begin
+		if(opening)begin
+			x = opening_x;
+			y = opening_y;
+			colour = opening_colour;
+			writeEn = 1;
+		end
+		else if(win)begin
+			x = win_x;
+			y = win_y;
+			colour = win_colour;
+			writeEn = 1;
+		end
+		else if(lose)begin
+			x = lose_x;
+			y = lose_y;
+			colour = lose_colour;
+			writeEn = 1;
+		end
+		else if(isloading)begin
 			case(draw_mux)
 				2'd0:begin 
 					x = ball_x;
