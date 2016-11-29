@@ -150,7 +150,7 @@ module ball_collision(
 	output [9:0]col_x1, col_x2, col_y1, col_y2,
 	output col_1, col_2,
 	
-	output [1:0] col_health1, col_health2,
+	output [1:0] col_health1, col_health2
 	);
 	
 	
