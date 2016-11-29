@@ -3,7 +3,7 @@ module pic_memory(
 	input clk,
 	
 	input enable,
-	input [2:0]screen_select,
+	input [1:0]screen_select,
 	
 	output [9:0]x, y,
 	output reg[1:0]colour
@@ -51,9 +51,9 @@ module pic_memory(
 		end
 		else begin
 			case(screen_select)
-				0: colour <= title_colour;
-				1: colour <= win_colour;
-				2: colour <= lose_colour;
+				2'd0: colour <= title_colour;
+				2'd1: colour <= win_colour;
+				2'd2: colour <= lose_colour;
 			endcase
 		end 
 	end

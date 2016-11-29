@@ -49,6 +49,7 @@ module brickbreaker(
 	wire left, right;
 	
 	wire logic_go;
+	wire opening;
 	assign resetn = KEY[0];
 	assign start = KEY[1];
 	assign left = ~KEY[3];
@@ -79,6 +80,8 @@ module brickbreaker(
 	//collision wires
 	wire [9:0]platx;
 	
+	wire vgareset;
+	
 	assign screen_x = 10'd160 - 10'd1;
 	assign screen_y = 10'd120 - 10'd1;
 	assign delay = 40'd833333;
@@ -89,7 +92,7 @@ module brickbreaker(
 	load_data ld(
 		.resetn(resetn),
 		.clk(CLOCK_50),
-		.selection(SW),
+		.selection(SW[2:0]),
 		
 		.load_draw(load_draw),
 		.loading(loading),
@@ -328,6 +331,34 @@ module brickbreaker(
 		.d_x(platx)
 	);
 	
+	reg [1:0]flags;
+	always @(*)begin
+		if(opening)begin
+			flags = 2'd0;
+		end
+		else if(win)begin
+			flags = 2'd1;
+		end
+		else if(lose)begin
+			flags = 2'd2;
+		end
+	end
+	
+	wire [9:0] screen_dx, screen_dy;
+	wire [1:0] screen_colour;
+	
+	pic_memory(
+		.resetn(resetn),
+		.clk(clk),
+		
+		.enable(opening | win_occurred | lose_occurred),
+		.screen_select(flags),
+		
+		.x(screen_dx), 
+		.y(screen_dy),
+		.colour(screen_colour)
+	);
+	
 	//MUX
 	draw_mux drawmux(
 		.ball_x(ball_dx),
@@ -338,11 +369,14 @@ module brickbreaker(
 		.plat_y(plat_dy),
 		.load_x(load_dx),
 		.load_y(load_dy),
+		.screen_x(screen_dx),
+		.screen_y(screen_dy),
 		
 		.ball_colour(ball_colour),
 		.brick_colour(brick_colour),
 		.plat_colour(plat_colour),
 		.load_colour(load_colour),
+		.screen_colour(screen_colour),
 		
 		.ball_en(ball_en), 
 		.brick_en(brick_en), 
@@ -362,7 +396,7 @@ module brickbreaker(
 	
 	//draw
 	draw draw(
-		.resetn(resetn),
+		.resetn(vgareset),
 		.clk(CLOCK_50),
 		
 		.x(x_vga),
@@ -391,6 +425,15 @@ module brickbreaker(
 		.d_enable(delay_enable)
 	);
 	
+	assign vgareset = SW[9];
+	
+	reg resetonce;
+	always @(posedge resetn)begin
+		if(!vgareset)
+			resetonce = 0;
+		else
+			resetonce = 1;
+	end
 	reg go;
 	always @(posedge start)begin
 		if(!resetn)
@@ -399,6 +442,7 @@ module brickbreaker(
 			go = 1;
 	end
 	
+	assign opening = resetonce;
 	assign enable = delay_enable & go;
 	
 endmodule
@@ -611,8 +655,8 @@ module draw(
 endmodule
 
 module draw_mux(
-	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,load_x,load_y, opening_x, opening_y, win_x, win_y, lose_x, lose_y,
-	input [2:0]ball_colour,brick_colour,plat_colour,load_colour, opening_colour, win_colour, lose_colour,
+	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,load_x,load_y, screen_x, screen_y,
+	input [2:0]ball_colour,brick_colour,plat_colour,load_colour, screen_colour,
 	input ball_en, brick_en, plat_en, load_en,
 	input [1:0]draw_mux,
 	input iscolour,
@@ -630,22 +674,10 @@ module draw_mux(
 	localparam BLACK = 3'b000;
 	
 	always @(*)begin
-		if(opening)begin
-			x = opening_x;
-			y = opening_y;
-			colour = opening_colour;
-			writeEn = 1;
-		end
-		else if(win)begin
-			x = win_x;
-			y = win_y;
-			colour = win_colour;
-			writeEn = 1;
-		end
-		else if(lose)begin
-			x = lose_x;
-			y = lose_y;
-			colour = lose_colour;
+		if(opening | win | lose)begin
+			x = screen_x;
+			y = screen_y;
+			colour = screen_colour;
 			writeEn = 1;
 		end
 		else if(isloading)begin

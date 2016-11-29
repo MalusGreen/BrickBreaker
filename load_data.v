@@ -3,7 +3,7 @@
 module load_data(
 	input resetn,
 	input clk,
-	input [9:0]selection,
+	input [2:0]selection,
 	
 	output load_draw,
 	output loading,
@@ -119,7 +119,7 @@ module load_datapath(
 	
 	input [19:0] draw_delay,
 	input [19:0] brick_count,
-	input [9:0]selection,
+	input [1:0]selection,
 	
 	output done_all,
 	output done_draw,
@@ -168,7 +168,7 @@ module load_datapath(
 endmodule
 
 module load_mux(
-		input [9:0]selection,
+		input [1:0]selection,
 		input [19:0]count,
 		
 		output [9:0]x_out, y_out,
@@ -196,15 +196,15 @@ module load_mux(
 	
 	always @(*)begin
 		case(selection)
-			10'd0: begin
+			2'd0: begin
 				health = health_1;
 				total_health = `LV1HP;
 			end
-			10'd1: begin
+			2'd1: begin
 				health = health_2;
 				total_health = `LV2HP;
 			end
-			10'd2: begin
+			2'd2: begin
 				health = health_3;
 				total_health = `LV3HP;
 			end
