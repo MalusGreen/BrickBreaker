@@ -44,7 +44,7 @@ module brickbreaker(
 	output	[9:0]	VGA_B;   				//	VGA Blue[9:0]
 	
 	//Inputs
-	wire resetn, loading, loadingresetn;
+	wire resetn, loading, start;
 	wire x_du, y_du;
 	wire left, right;
 	
@@ -195,16 +195,16 @@ module brickbreaker(
 		.y(ball_y)
 	);
 	
-	wire [9:0] test_address, test_x, test_y;
-	
-	address_xy fuck(
-		.x_in(ball_y),
-		.y_in(ball_x),
-		.address_in(test_address),
-		.address_out(test_address),
-		.x_out(test_x),
-		.y_out(test_y)
-	);
+//	wire [9:0] test_address, test_x, test_y;
+//	
+//	address_xy fuck(
+//		.x_in(ball_y),
+//		.y_in(ball_x),
+//		.address_in(test_address),
+//		.address_out(test_address),
+//		.x_out(test_x),
+//		.y_out(test_y)
+//	);
 	
 	//Wires for draw values.
 	wire [9:0]ball_dx,brick_dx,plat_dx,ball_dy,brick_dy,plat_dy;

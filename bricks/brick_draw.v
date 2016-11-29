@@ -1,3 +1,5 @@
+`include "macros.v"
+
 module brick_fsm(
 	input resetn,
 	input clk,

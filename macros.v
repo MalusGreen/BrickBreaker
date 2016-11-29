@@ -8,7 +8,7 @@
 ***************/
 `define GRIDX 10'd16
 `define GRIDY 10'd8
-`define BRICKNUM 20'd127
+`define BRICKNUM 20'd383
 `define BRICKX 10'd10
 `define BRICKY 10'd5
 `define BRICKDRAW 20'd100

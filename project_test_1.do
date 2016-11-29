@@ -23,6 +23,10 @@ force {KEY} 0000
 run 2ns
 force {KEY} 0001
 run 2ns
+force {KEY} 0011
+run 2ns
+force {KEY} 0001
+run 2ns
 
 force {KEY[3]} 0
 force {KEY[2]} 1
