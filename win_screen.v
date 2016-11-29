@@ -4,7 +4,7 @@
 // MODULE: altsyncram 
 
 // ============================================================
-// File Name: startpic.v
+// File Name: win_screen.v
 // Megafunction Name(s):
 // 			altsyncram
 //
@@ -37,7 +37,7 @@
 // synopsys translate_off
 `timescale 1 ps / 1 ps
 // synopsys translate_on
-module startpic (
+module win_screen (
 	address,
 	clock,
 	data,
@@ -88,9 +88,9 @@ module startpic (
 		altsyncram_component.clock_enable_input_a = "BYPASS",
 		altsyncram_component.clock_enable_output_a = "BYPASS",
 `ifdef NO_PLI
-		altsyncram_component.init_file = "../startpic.rif"
+		altsyncram_component.init_file = "Win_Screen.rif"
 `else
-		altsyncram_component.init_file = "../startpic.hex"
+		altsyncram_component.init_file = "Win_Screen.hex"
 `endif
 ,
 		altsyncram_component.intended_device_family = "Cyclone V",
@@ -131,7 +131,7 @@ endmodule
 // Retrieval info: PRIVATE: JTAG_ENABLED NUMERIC "0"
 // Retrieval info: PRIVATE: JTAG_ID STRING "NONE"
 // Retrieval info: PRIVATE: MAXIMUM_DEPTH NUMERIC "0"
-// Retrieval info: PRIVATE: MIFfilename STRING "../startpic.hex"
+// Retrieval info: PRIVATE: MIFfilename STRING "Win_Screen.hex"
 // Retrieval info: PRIVATE: NUMWORDS_A NUMERIC "32768"
 // Retrieval info: PRIVATE: RAM_BLOCK_TYPE NUMERIC "0"
 // Retrieval info: PRIVATE: READ_DURING_WRITE_MODE_PORT_A NUMERIC "3"
@@ -148,7 +148,7 @@ endmodule
 // Retrieval info: LIBRARY: altera_mf altera_mf.altera_mf_components.all
 // Retrieval info: CONSTANT: CLOCK_ENABLE_INPUT_A STRING "BYPASS"
 // Retrieval info: CONSTANT: CLOCK_ENABLE_OUTPUT_A STRING "BYPASS"
-// Retrieval info: CONSTANT: INIT_FILE STRING "../startpic.hex"
+// Retrieval info: CONSTANT: INIT_FILE STRING "Win_Screen.hex"
 // Retrieval info: CONSTANT: INTENDED_DEVICE_FAMILY STRING "Cyclone V"
 // Retrieval info: CONSTANT: LPM_HINT STRING "ENABLE_RUNTIME_MOD=NO"
 // Retrieval info: CONSTANT: LPM_TYPE STRING "altsyncram"
@@ -171,10 +171,10 @@ endmodule
 // Retrieval info: CONNECT: @data_a 0 0 3 0 data 0 0 3 0
 // Retrieval info: CONNECT: @wren_a 0 0 0 0 wren 0 0 0 0
 // Retrieval info: CONNECT: q 0 0 3 0 @q_a 0 0 3 0
-// Retrieval info: GEN_FILE: TYPE_NORMAL startpic.v TRUE
-// Retrieval info: GEN_FILE: TYPE_NORMAL startpic.inc FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL startpic.cmp FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL startpic.bsf FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL startpic_inst.v FALSE
-// Retrieval info: GEN_FILE: TYPE_NORMAL startpic_bb.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL win_screen.v TRUE
+// Retrieval info: GEN_FILE: TYPE_NORMAL win_screen.inc FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL win_screen.cmp FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL win_screen.bsf FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL win_screen_inst.v FALSE
+// Retrieval info: GEN_FILE: TYPE_NORMAL win_screen_bb.v TRUE
 // Retrieval info: LIB_FILE: altera_mf
