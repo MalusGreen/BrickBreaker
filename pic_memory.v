@@ -18,11 +18,27 @@ module mem_draw(
 	input resetn,
 	input clk,
 	
-	output [15:0]address,
-	output [9:0]x,
-	output [9:0]y
+	output reg [14:0]address,
+	output reg [9:0]x, y
 	);
 	
+	reg count;
+	always @(posedge go)begin
+		if(resetn)begin
+			count = 0;
+		end
+		else begin
+			count = 1;
+		end
+	end
 	
+	always @(posedge clk)begin
+		if(!resetn)begin
+			address <= 0;
+			x <= 0;
+			y <= 0;
+		end
+		if(opening)
+	end
 	
 endmodule
