@@ -66,10 +66,6 @@ module ball_logic(
 		
 		.col_health1(col_health1),
 		.col_health2(col_health2),
-		
-		.col_check_1(col_check_1), 
-		.col_check_2(col_check_2),
-		.col_check_3(col_check_3)
 	);
 	
 	
@@ -155,10 +151,6 @@ module ball_collision(
 	output col_1, col_2,
 	
 	output [1:0] col_health1, col_health2,
-	
-	output col_check_1, 
-	output col_check_2,
-	output col_check_3
 	);
 	
 	
@@ -226,10 +218,6 @@ module ball_collision(
 		.col_1(col_1),
 		.col_2(col_2)
 	);
-	
-	assign col_check_1 = ckcol1;
-	assign col_check_2 = ckcol2;
-	assign col_check_3 = ckcol3;
 	
 endmodule
 

@@ -5,7 +5,7 @@ module win_checker(
 	input game_write,
 	input [9:0]total_health,
 		
-	output reg win_occured
+	output reg win_occurred
 	);
 	
 	reg [9:0]health_counter;
