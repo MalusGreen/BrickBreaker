@@ -64,15 +64,17 @@ module control(
 	
 	reg [1:0] current_state, next_state;
 
-	localparam 	S_LOAD_X			= 2'd0,
-					S_INC_X   	   = 2'd1;
+	localparam 	S_WAIT			= 2'd0,
+					S_LOAD_X			= 2'd1,
+					S_INC_X   	   = 2'd2;
 					
 	always @(*)
    begin: state_table 
 			case (current_state)
-					S_LOAD_X: next_state = draw ? S_INC_X : S_LOAD_X; // Loop in current state until value is input
-					S_INC_X: next_state = finished_row ? S_LOAD_X : S_INC_X;
-            default:     next_state = S_LOAD_X;
+					S_WAIT: next_state = draw ? S_LOAD_X : S_WAIT;
+					S_LOAD_X: next_state = S_INC_X;
+					S_INC_X: next_state = finished_row ? S_WAIT : S_INC_X;
+            default:     next_state = S_WAIT;
         endcase
    end // state_table
 	 
@@ -86,7 +88,6 @@ module control(
         case (current_state)
             S_LOAD_X: begin
 					ld_x  = 1;
-					wren = 1;
 					end
 				S_INC_X: begin
 					inc_x = 1;
@@ -137,7 +138,7 @@ module datapath(
 			else if(enable & right & x < 10'd159) 
 				x <= x + 10'd1;
 			if(ld_x)begin
-				qx <= size - 10'd1;
+				qx <= size;
 				finished_row <= 0;
 			end
 			
