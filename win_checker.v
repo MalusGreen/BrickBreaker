@@ -12,12 +12,12 @@ module win_checker(
 	
 	always @(posedge clk) begin
 		if(!resetn) begin
-			win_occurred <= 10'd0;
+			win_occurred <= 1'd0;
 			health_counter <= total_health;
 		end
 		else if(game_write) begin
 			if(health_counter == 10'd0) begin
-				win_occurred <= 10'd1;
+				win_occurred <= 1'd1;
 			end
 			else begin
 				health_counter <= health_counter - 10'd1;
