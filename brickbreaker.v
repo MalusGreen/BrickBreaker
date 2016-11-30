@@ -347,6 +347,7 @@ module brickbreaker(
 	
 	wire [9:0] screen_dx, screen_dy;
 	wire [1:0] screen_colour;
+	wire screen_en;
 	
 	pic_memory(
 		.resetn(resetn),
@@ -355,6 +356,7 @@ module brickbreaker(
 		.enable(opening | win_occurred | loss_occurred),
 		.screen_select(flags),
 		
+		.drawing(screen_en),
 		.x(screen_dx), 
 		.y(screen_dy),
 		.colour(screen_colour)
@@ -387,6 +389,7 @@ module brickbreaker(
 		.brick_en(brick_en), 
 		.plat_en(plat_en),
 		.load_en(load_wren),
+		.screen_en(screen_en),
 		
 		.draw_mux(draw_mux),
 		
@@ -662,7 +665,7 @@ endmodule
 module draw_mux(
 	input [9:0]ball_x,brick_x,plat_x,ball_y,brick_y,plat_y,load_x,load_y, screen_x, screen_y,
 	input [2:0]ball_colour,brick_colour,plat_colour,load_colour, screen_colour,
-	input ball_en, brick_en, plat_en, load_en,
+	input ball_en, brick_en, plat_en, load_en, screen_en,
 	input [1:0]draw_mux,
 	input iscolour,
 	input isloading,
@@ -683,7 +686,7 @@ module draw_mux(
 			x = screen_x;
 			y = screen_y;
 			colour = screen_colour;
-			writeEn = 1;
+			writeEn = screen_en;
 		end
 		else if(isloading)begin
 			case(draw_mux)
