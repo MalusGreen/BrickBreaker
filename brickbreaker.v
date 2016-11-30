@@ -1,13 +1,13 @@
-//`include "ball/ball_pos.v"
-//`include "ball/ball_draw.v"
-//`include "ball/ball_logic.v"
-//`include "delay_counter.v"
-//`include "platform.v"
-//`include "load_data.v"
-//`include "memory.v"
-//`include "bricks/address_xy.v"
-//`include "bricks/brick_memory.v"
-//`include "bricks/brick_draw.v"
+`include "ball/ball_pos.v"
+`include "ball/ball_draw.v"
+`include "ball/ball_logic.v"
+`include "delay_counter.v"
+`include "platform.v"
+`include "load_data.v"
+`include "memory.v"
+`include "bricks/address_xy.v"
+`include "bricks/brick_memory.v"
+`include "bricks/brick_draw.v"
 
 `include "macros.v"
 
@@ -84,25 +84,10 @@ module brickbreaker(
 	
 	assign screen_x = 10'd160 - 10'd1;
 	assign screen_y = 10'd120 - 10'd1;
-	assign delay = 40'd833333;
+//	assign delay = 40'd833333;
 //	assign delay = 40'd1666666;
-//	assign delay = 40'd256;
+	assign delay = 40'd256;
 	assign size = 10'd2;
-	
-	load_data ld(
-		.resetn(resetn),
-		.clk(CLOCK_50),
-		.selection(SW[2:0]),
-		
-		.load_draw(load_draw),
-		.loading(loading),
-		.writeEn(load_write),
-		.x_out(load_x),
-		.y_out(load_y),
-		.address(load_address),
-		.health(load_data),
-		.total_health(total_health)
-	);
 	
 	wire [9:0] mem_x_in, mem_y_in, mem_x_out, mem_y_out ,game_x_in, game_y_in;
 	wire mem_write, game_write;
@@ -118,6 +103,21 @@ module brickbreaker(
 	assign LEDR[0] = win_occurred;
 	assign LEDR[1] = loss_occurred;
 	assign LEDR[2] = opening;
+	
+	load_data ld(
+		.resetn(resetn),
+		.clk(CLOCK_50),
+		.selection(SW[2:0]),
+		
+		.load_draw(load_draw),
+		.loading(loading),
+		.writeEn(load_write),
+		.x_out(load_x),
+		.y_out(load_y),
+		.address(load_address),
+		.health(load_data),
+		.total_health(total_health)
+	);
 	
 	win_checker w_check(
 		.clk(CLOCK_50),
@@ -635,27 +635,27 @@ module draw(
 	);
 	
 	
-	vga_adapter VGA(
-		.resetn(resetn),
-		.clock(clk),
-		.colour(colour),
-		.x(x),
-		.y(y),
-		.plot(writeEn),
-		
-		/* Signals for the DAC to drive the monitor. */
-		.VGA_R(VGA_R),
-		.VGA_G(VGA_G),
-		.VGA_B(VGA_B),
-		.VGA_HS(VGA_HS),
-		.VGA_VS(VGA_VS),
-		.VGA_BLANK(VGA_BLANK_N),
-		.VGA_SYNC(VGA_SYNC_N),
-		.VGA_CLK(VGA_CLK));
-	defparam VGA.RESOLUTION = "160x120";
-	defparam VGA.MONOCHROME = "FALSE";
-	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
-	defparam VGA.BACKGROUND_IMAGE = "black.mif";
+//	vga_adapter VGA(
+//		.resetn(resetn),
+//		.clock(clk),
+//		.colour(colour),
+//		.x(x),
+//		.y(y),
+//		.plot(writeEn),
+//		
+//		/* Signals for the DAC to drive the monitor. */
+//		.VGA_R(VGA_R),
+//		.VGA_G(VGA_G),
+//		.VGA_B(VGA_B),
+//		.VGA_HS(VGA_HS),
+//		.VGA_VS(VGA_VS),
+//		.VGA_BLANK(VGA_BLANK_N),
+//		.VGA_SYNC(VGA_SYNC_N),
+//		.VGA_CLK(VGA_CLK));
+//	defparam VGA.RESOLUTION = "160x120";
+//	defparam VGA.MONOCHROME = "FALSE";
+//	defparam VGA.BITS_PER_COLOUR_CHANNEL = 1;
+//	defparam VGA.BACKGROUND_IMAGE = "black.mif";
 	
 endmodule
 

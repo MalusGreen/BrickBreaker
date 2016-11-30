@@ -16,11 +16,10 @@ module win_checker(
 			health_counter <= total_health;
 		end
 		else if(game_write) begin
+			health_counter <= health_counter - 10'd1;
 			if(health_counter == 10'd0) begin
 				win_occurred <= 1'd1;
-			end
-			else begin
-				health_counter <= health_counter - 10'd1;
+				health_counter <= total_health;
 			end
 		end
 	end
