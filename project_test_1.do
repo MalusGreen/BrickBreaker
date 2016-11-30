@@ -20,8 +20,19 @@ add wave -r {/*}
 force {CLOCK_50} 0 0ns, 1 1ns -r 2ns
 
 
+force {KEY} 0000
+run 2ns
+force {KEY} 0001
+run 2ns
+force {KEY} 0011
+run 2ns
+force {KEY} 0011
+run 2ns
+
 force {SW[9:0]} 000000000
 run 2ns
+
+
 
 force {KEY[3]} 0
 force {KEY[2]} 1

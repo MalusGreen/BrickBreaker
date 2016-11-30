@@ -300,7 +300,8 @@ module level_two(
 			20'd113:
 				health = 2'd1;
 			default:
-				health = 2'd0;
+				if(count > 20'd351)
+					health = 2'd0;
 		endcase
 	end
 		
@@ -314,7 +315,11 @@ module level_three(
 	
 	always @(*)begin
 		case(count)
-			default: health = 2'd2;
+			default: 
+				if(count > 20'd351)
+					health = 2'd0;
+				else
+					health = 2'd2;
 		endcase
 	end
 	
