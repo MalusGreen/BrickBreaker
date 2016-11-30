@@ -1,16 +1,16 @@
-`include "ball/ball_pos.v"
-`include "ball/ball_draw.v"
-`include "ball/ball_logic.v"
-`include "delay_counter.v"
-`include "platform.v"
-`include "load_data.v"
-`include "memory.v"
-`include "bricks/address_xy.v"
-`include "bricks/brick_memory.v"
-`include "bricks/brick_draw.v"
-`include "pic_memory.v"
-`include "win_checker.v"
-`include "lose_checker.v"
+//`include "ball/ball_pos.v"
+//`include "ball/ball_draw.v"
+//`include "ball/ball_logic.v"
+//`include "delay_counter.v"
+//`include "platform.v"
+//`include "load_data.v"
+//`include "memory.v"
+//`include "bricks/address_xy.v"
+//`include "bricks/brick_memory.v"
+//`include "bricks/brick_draw.v"
+//`include "pic_memory.v"
+//`include "win_checker.v"
+//`include "lose_checker.v"
 
 `include "macros.v"
 
@@ -65,6 +65,8 @@ module brickbreaker(
 	wire [1:0] load_data;
 	wire load_write;
 	
+	
+	wire delay_enable;
 	wire [9:0] load_dx, load_dy;
 	wire load_wren;
 	wire [2:0] load_colour;
@@ -89,7 +91,7 @@ module brickbreaker(
 	assign screen_y = 10'd120 - 10'd1;
 	assign delay = 40'd833333;
 //	assign delay = 40'd1666666;
-//	assign delay = 40'd256;
+//	assign delay = 40'd19200;
 	assign size = 10'd2;
 	
 	wire [9:0] mem_x_in, mem_y_in, mem_x_out, mem_y_out ,game_x_in, game_y_in;
@@ -108,7 +110,7 @@ module brickbreaker(
 	assign LEDR[2] = opening;
 	
 	load_data ld(
-		.resetn(resetn),
+		.resetn(vgareset),
 		.clk(CLOCK_50),
 		.selection(SW[1:0]),
 		
@@ -124,7 +126,7 @@ module brickbreaker(
 	
 	win_checker w_check(
 		.clk(CLOCK_50),
-		.resetn(resetn),
+		.resetn(vgareset),
 		.game_write(game_write),
 		.total_health(total_health),
 			
@@ -353,9 +355,9 @@ module brickbreaker(
 	wire screen_en;
 	
 	pic_memory pm(
-		.resetn(resetn),
+		.resetn(vgareset),
 		.clk(CLOCK_50),
-		.frame(delay_enable),
+//		.frame(delay_enable),
 		
 		.enable(opening | win_occurred | loss_occurred),
 		.screen_select(flags),
@@ -426,12 +428,10 @@ module brickbreaker(
 		.VGA_G(VGA_G),	 						//	VGA Green[9:0]
 		.VGA_B(VGA_B)   						   //	VGA Blue[9:0]
 	);
-	
-	wire delay_enable;
 	//delay
 	delay_counter delaycounter(
 		.clk(CLOCK_50),
-		.resetn(resetn),
+		.resetn(vgareset),
 		.delay(delay),
 		
 		.d_enable(delay_enable)

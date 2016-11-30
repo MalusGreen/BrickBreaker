@@ -6,7 +6,7 @@
 module pic_memory(
 	input resetn,
 	input clk,
-	input frame,
+//	input frame,
 	input enable,
 	input [1:0]screen_select,
 	
@@ -23,7 +23,7 @@ module pic_memory(
 		.resetn(resetn),
 		.clk(clk),
 		
-		.frame(frame),
+//		.frame(frame),
 		.drawing(drawing),
 		.address(address),
 		.x(x),
@@ -73,7 +73,7 @@ module mem_draw(
 	input go,
 	input resetn,
 	input clk,
-	input frame,
+//	input frame,
 	
 	output reg drawing,
 	output reg[14:0]address,
@@ -88,13 +88,16 @@ module mem_draw(
 			drawing <= 1'd0;
 			address_counter <= 14'd0;
 		end
-		if(go & frame) begin
+		if(go) begin
 			drawing <= 1'd1;
 		end
 		if(drawing) begin
-			address_counter <= address_counter + 14'd1;
-			if(address_counter == 14'd0)
+			if(address_counter == (14'd19200 - 14'd1))begin
 				drawing <= 1'd0;
+				address_counter <= 14'd0;
+			end
+			else
+				address_counter <= address_counter + 14'd1;
 		end
 	end
 	
