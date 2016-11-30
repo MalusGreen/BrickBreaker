@@ -3,7 +3,7 @@
 module load_data(
 	input resetn,
 	input clk,
-	input [2:0]selection,
+	input [1:0]selection,
 	
 	output load_draw,
 	output loading,
