@@ -5,10 +5,11 @@ module win_checker(
 	input game_write,
 	input [9:0]total_health,
 		
-	output reg win_occurred
+	output regwin_occurred,
+	output reg [9:0]health_counter
 	);
 	
-	reg [9:0]health_counter;
+	//reg [9:0]health_counter;
 	
 	always @(posedge clk) begin
 		if(!resetn) begin

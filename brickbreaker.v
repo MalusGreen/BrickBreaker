@@ -1,16 +1,16 @@
-`include "ball/ball_pos.v"
-`include "ball/ball_draw.v"
-`include "ball/ball_logic.v"
-`include "delay_counter.v"
-`include "platform.v"
-`include "load_data.v"
-`include "memory.v"
-`include "bricks/address_xy.v"
-`include "bricks/brick_memory.v"
-`include "bricks/brick_draw.v"
-`include "pic_memory.v"
-`include "win_checker.v"
-`include "lose_checker.v"
+//`include "ball/ball_pos.v"
+//`include "ball/ball_draw.v"
+//`include "ball/ball_logic.v"
+//`include "delay_counter.v"
+//`include "platform.v"
+//`include "load_data.v"
+//`include "memory.v"
+//`include "bricks/address_xy.v"
+//`include "bricks/brick_memory.v"
+//`include "bricks/brick_draw.v"
+//`include "pic_memory.v"
+//`include "win_checker.v"
+//`include "lose_checker.v"
 
 `include "macros.v"
 
@@ -104,8 +104,11 @@ module brickbreaker(
 	assign mem_write = (loading) ? game_write : load_write;
 	
 	assign LEDR[0] = win_occurred;
-	assign LEDR[1] = loss_occurred;
-	assign LEDR[2] = opening;
+	//assign LEDR[1] = loss_occurred;
+	//assign LEDR[2] = opening;
+	
+	wire [9:0]health_counter;
+	assign LEDR[9:1] = health_counter[8:0];
 	
 	load_data ld(
 		.resetn(resetn),
@@ -128,7 +131,10 @@ module brickbreaker(
 		.game_write(game_write),
 		.total_health(total_health),
 			
-		.win_occurred(win_occurred)
+		.win_occurred(win_occurred),
+		
+		.health_counter(health_counter)
+		
 	);
 	
 	lose_checker l_check(
