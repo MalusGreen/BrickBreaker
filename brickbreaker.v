@@ -116,7 +116,8 @@ module brickbreaker(
 	assign mem_write = (loading) ? game_write : load_write;
 	
 	assign LEDR[0] = win_occurred;
-	assign LEDR[9] = loss_occurred;
+	assign LEDR[1] = loss_occurred;
+	assign LEDR[2] = opening;
 	
 	win_checker w_check(
 		.clk(CLOCK_50),
@@ -432,22 +433,22 @@ module brickbreaker(
 	assign vgareset = SW[9];
 	
 	reg resetonce;
-	always @(posedge resetn)begin
+	always @(posedge CLOCK_50)begin
 		if(!vgareset)
 			resetonce = 0;
-		else
+		else if(!resetn)
 			resetonce = 1;
 	end
 	reg go;
-	always @(posedge start)begin
+	always @(posedge CLOCK_50)begin
 		if(!resetn)
 			go = 0;
-		else
+		else if(!start)
 			go = 1;
 	end
 	
-	assign opening = resetonce;
-	assign enable = delay_enable & go;
+	assign opening = ~resetonce;
+	assign enable = delay_enable & go & ~(opening | win_occurred | loss_occurred);
 	
 endmodule
 
