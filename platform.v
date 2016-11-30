@@ -11,7 +11,7 @@ module platform(
 	output [2:0] colour,
 	output writeEn,
 	
-	output [9:0]d_x, d_qx
+	output [9:0]d_x
 	);
 	
 	wire ld_x, inc_x;
@@ -46,8 +46,7 @@ module platform(
 		.y_out(y),
 		.finished_row(finished_row),
 		
-		.x(d_x),
-		.qx(d_qx)
+		.x(d_x)
 	);
 	
 endmodule
@@ -119,10 +118,10 @@ module datapath(
 	output reg [9:0]x_out, y_out,
 	output reg finished_row,
 	
-	output reg [9:0] x, qx
+	output reg [9:0] x
 	);
 	
-//	reg [9:0] x, qx;
+	reg [9:0] qx;
 	reg [9:0] y;
 	
 	always @ (posedge clk) begin

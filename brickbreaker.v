@@ -8,6 +8,9 @@
 `include "bricks/address_xy.v"
 `include "bricks/brick_memory.v"
 `include "bricks/brick_draw.v"
+`include "pic_memory.v"
+`include "win_checker.v"
+`include "lose_checker.v"
 
 `include "macros.v"
 
@@ -93,7 +96,7 @@ module brickbreaker(
 	wire mem_write, game_write;
 	wire [1:0]mem_in_health, mem_out_health, game_health;
 	wire win_occurred, loss_occurred;
-	wire total_health;
+	wire [9:0]total_health;
 	
 	assign mem_in_health = (loading) ? game_health : load_data;
 	assign mem_x_in = (loading) ? game_x_in : load_x;
@@ -107,7 +110,7 @@ module brickbreaker(
 	load_data ld(
 		.resetn(resetn),
 		.clk(CLOCK_50),
-		.selection(SW[2:0]),
+		.selection(SW[1:0]),
 		
 		.load_draw(load_draw),
 		.loading(loading),
@@ -346,10 +349,10 @@ module brickbreaker(
 	end
 	
 	wire [9:0] screen_dx, screen_dy;
-	wire [1:0] screen_colour;
+	wire [2:0] screen_colour;
 	wire screen_en;
 	
-	pic_memory(
+	pic_memory pm(
 		.resetn(resetn),
 		.clk(CLOCK_50),
 		

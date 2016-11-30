@@ -1,3 +1,8 @@
+`include "title_screen.v"
+`include "win_screen.v"
+`include "game_over.v"
+
+
 module pic_memory(
 	input resetn,
 	input clk,
@@ -7,10 +12,10 @@ module pic_memory(
 	
 	output drawing,
 	output [9:0]x, y,
-	output reg[1:0]colour
+	output reg[2:0]colour
 	);
 	
-	wire [1:0]title_colour, win_colour, lose_colour;
+	wire [2:0]title_colour, win_colour, lose_colour;
 	wire [14:0]address;
 	
 	mem_draw md(
