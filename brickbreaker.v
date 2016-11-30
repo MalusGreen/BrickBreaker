@@ -106,8 +106,11 @@ module brickbreaker(
 	assign mem_write = (loading) ? game_write : load_write;
 	
 	assign LEDR[0] = win_occurred;
-	assign LEDR[1] = loss_occurred;
-	assign LEDR[2] = opening;
+	//assign LEDR[1] = loss_occurred;
+	//assign LEDR[2] = opening;
+	
+	wire [9:0]health_counter;
+	assign LEDR[9:1] = health_counter[8:0];
 	
 	load_data ld(
 		.resetn(vgareset),
@@ -130,7 +133,10 @@ module brickbreaker(
 		.game_write(game_write),
 		.total_health(total_health),
 			
-		.win_occurred(win_occurred)
+		.win_occurred(win_occurred),
+		
+		.health_counter(health_counter)
+		
 	);
 	
 	lose_checker l_check(
