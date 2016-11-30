@@ -113,7 +113,7 @@ module brickbreaker(
 	assign LEDR[9:1] = health_counter[8:0];
 	
 	load_data ld(
-		.resetn(vgareset),
+		.resetn(resetn),
 		.clk(CLOCK_50),
 		.selection(SW[1:0]),
 		
@@ -129,7 +129,7 @@ module brickbreaker(
 	
 	win_checker w_check(
 		.clk(CLOCK_50),
-		.resetn(vgareset),
+		.resetn(resetn),
 		.game_write(game_write),
 		.total_health(total_health),
 			
@@ -361,9 +361,9 @@ module brickbreaker(
 	wire screen_en;
 	
 	pic_memory pm(
-		.resetn(vgareset),
+		.resetn(resetn),
 		.clk(CLOCK_50),
-//		.frame(delay_enable),
+		.frame(delay_enable),
 		
 		.enable(opening | win_occurred | loss_occurred),
 		.screen_select(flags),
@@ -437,7 +437,7 @@ module brickbreaker(
 	//delay
 	delay_counter delaycounter(
 		.clk(CLOCK_50),
-		.resetn(vgareset),
+		.resetn(resetn),
 		.delay(delay),
 		
 		.d_enable(delay_enable)
